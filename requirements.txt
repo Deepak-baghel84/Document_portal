@@ -1,10 +1,11 @@
-FastAPI
-uvicorn
-python-dotenv
+FastAPI==0.110.2
+uvicorn==0.29.0
+python-dotenv==1.0.1
+setuptools==70.0.0
 
-pandas
-numpy
-matplotlib
+pandas==2.2.2
+numpy==1.26.4
+matplotlib==3.8.4
 
 
 
