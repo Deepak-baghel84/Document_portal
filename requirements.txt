@@ -1,0 +1,10 @@
+FastAPI
+uvicorn
+python-dotenv
+
+pandas
+numpy
+matplotlib
+
+
+
