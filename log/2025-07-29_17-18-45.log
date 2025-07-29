@@ -1,0 +1,2 @@
+[2025-07-29 17:18:45,376] - INFO - custom_logger.py (line:40) - This is an info message.
+[2025-07-29 17:18:45,377] - ERROR - custom_logger.py (line:41) - This is an error message.

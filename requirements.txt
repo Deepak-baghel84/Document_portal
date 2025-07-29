@@ -2,6 +2,7 @@ FastAPI==0.110.2
 uvicorn==0.29.0
 python-dotenv==1.0.1
 setuptools==70.0.0
+pydantic==2.8.1
 
 pandas==2.2.2
 numpy==1.26.4
@@ -16,3 +17,6 @@ langchain-text-splitters
 langchain_groq
 langchain_google_genai
 
+pyMuPDF
+Faiss-cpu
+structlog
