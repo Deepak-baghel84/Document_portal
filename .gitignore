@@ -2,3 +2,4 @@ myenv
 .env
 
 document_portal.egg-info
+".env" 
