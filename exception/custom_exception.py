@@ -22,4 +22,4 @@ class CustomException(Exception):
             1 / 0  # Example to raise an exception
         except Exception as e:
             error = CustomException(e, sys)
-            print(error)
+            raise error

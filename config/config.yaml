@@ -1,0 +1,43 @@
+```yaml
+# config/config.yaml
+
+# Configuration file for the Document Portal application
+app:
+  name: "DocumentPortal"
+  version: "1.0.0"
+  description: "A portal for comparing,analyzing or making a chat with documents using AI."
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+database:
+  provider: "sqlite"
+  connection_string: "sqlite:///./database.db"
+document:
+  provider: "local"
+
+embedding:
+  provider: "google"
+  model: "models/text-embedding-004"
+
+llm:
+  groq:
+    provider: "groq"
+    model: "deepseek-r1-distill-llama-70b"
+    temperature: 0.2
+    max_output_tokens: 2048
+    #context_window: 8192
+  google:
+    provider: "google"
+    model: "gemini-1.5-flash"
+    temperature: 0.2
+    max_output_tokens: 2048
+    #context_window: 8192
+
+
+retriever:
+  top_k: 10
+
+vector_store:
+  provider: "chromadb"
+  collection_name: "document_collection"
+  persist_directory: "./vector_store" 
