@@ -18,14 +18,89 @@ log = CustomLogger().get_logger(__name__)
 
 
 class ModelLoader:
+    """Class to load and manage models for embeddings and language processing.  
+    It initializes the models based on configuration settings and provides methods to validate the environment."""
     def __init__(self):
-        pass
+        try:
+            load_dotenv()
+            self.config = load_config()
+            self.validate_env()
+           
+        except Exception as e:
+            log.error(f"Error in ModelLoader initialization: {e}")
+            raise CustomException(e, sys)
+
 
     def validate_env(self):
-        pass
+        models = ["GROQ_API_KEY", "GOOGLE_API_KEY"]
+        models_keys = {model:os.getenv(model) for model in models}
+        for model,key in models_keys.items():
+            if key is None:
+                log.error(f"Environment variable {model} is not set.")
+                raise CustomException(f"Environment variable {model} is not set.", sys)
+        
 
     def load_embedding(self):
-        pass
+        """Loads the embedding model based on the configuration settings."""
+        try:
+          model_name = self.config.get("embedding_model", "google")
+          log.info(f"Loading embedding model: {model_name}")
+          if model_name == "google":
+              return GoogleGenerativeAIEmbeddings(
+                  model=self.config["google_embedding_model"],
+                  max_retries=3,
+                  max_tokens=self.config["max_tokens"]
+              )
+          elif model_name == "groq":
+              return ChatGroq(
+                  model=self.config["groq_embedding_model"],
+                  max_retries=3,
+                  max_tokens=self.config["max_tokens"]
+              )
+          else:
+              raise CustomException(f"Unsupported embedding model: {self.config['embedding_model']}", sys)
+          log.info(f"Embedding model {model_name} loaded successfully.")
+        except Exception as e:
+            log.error(f"Error loading embedding model: {e}")
+            raise CustomException(e, sys)
 
     def load_llm(self):
-        pass
+        """Loads the language model based on the configuration settings."""
+
+        llm_block = self.config["llm"]
+        provider_key = os.getenv("LLM_PROVIDER", "google")
+        if provider_key not in llm_block:
+            log.error(f"LLM provider {provider_key} not found in configuration.")
+            raise CustomException(f"LLM provider {provider_key} not found in configuration.", sys)
+        
+
+        llm_config = llm_block[provider_key]
+        provider = llm_config.get("provider")
+        model_name = llm_config.get("model_name")
+        temperature = llm_config.get("temperature", 0.2)
+        max_tokens = llm_config.get("max_output_tokens", 2048)
+
+        
+        log.info(f"Loading LLM model: {model_name}")
+        if provider == "google":
+            return ChatGoogleGenerativeAI(
+                model=model_name,
+                max_retries=3,
+                max_tokens= max_tokens,
+                temperature=temperature,
+                )
+        elif provider == "groq":
+            return ChatGroq(
+                model=model_name,
+                max_retries=3,
+                max_tokens= max_tokens,
+                temperature=temperature,
+                )
+        else:
+            raise CustomException(f"Unsupported LLM model: {self.config['llm_model']}", sys)
+            log.info(f"LLM model {model_name} loaded successfully.")
+     
+
+
+if __name__ == "__main__":
+    loader = ModelLoader()

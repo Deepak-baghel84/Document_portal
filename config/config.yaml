@@ -15,7 +15,7 @@ database:
 document:
   provider: "local"
 
-embedding:
+embedding_model:
   provider: "google"
   model: "models/text-embedding-004"
 
