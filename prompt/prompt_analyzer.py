@@ -2,7 +2,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
       # Prompt for document analysis
 
-prompt = ChatPromptTemplate.from_template("""
+prompt_1 = ChatPromptTemplate.from_template("""
 You are a highly capable assistant trained to analyze and summarize documents.
 Return ONLY valid JSON matching the exact schema below.
                         {format_instructions}
@@ -10,3 +10,5 @@ Return ONLY valid JSON matching the exact schema below.
 Analyze this document:
 {document_text}
 """)
+Prompt_directory = {
+    "document_analysis": prompt_1}
