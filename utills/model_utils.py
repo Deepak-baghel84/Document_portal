@@ -24,20 +24,21 @@ class ModelLoader:
         try:
             load_dotenv()
             self.config = load_config()
-            self.validate_env()
+            self._validate_env()
            
         except Exception as e:
             log.error(f"Error in ModelLoader initialization: {e}")
             raise CustomException(e, sys)
+        log.info("ModelLoader initialized successfully.")
 
 
-    def validate_env(self):
+    def _validate_env(self):
         models = ["GROQ_API_KEY", "GOOGLE_API_KEY"]
         models_keys = {model:os.getenv(model) for model in models}
         for model,key in models_keys.items():
             if key is None:
-                log.error(f"Environment variable {model} is not set.")
-                raise CustomException(f"Environment variable {model} is not set.", sys)
+                log.error(f"Environment variable {model} is not set or provide api keys.")
+                raise CustomException(f"Environment variable {model} is not set or provide api keys.", sys)
         
 
     def load_embedding(self):
@@ -68,28 +69,28 @@ class ModelLoader:
         """Loads the language model based on the configuration settings."""
 
         llm_block = self.config["llm"]
-        provider_key = os.getenv("LLM_PROVIDER", "google")
-        if provider_key not in llm_block:
-            log.error(f"LLM provider {provider_key} not found in configuration.")
-            raise CustomException(f"LLM provider {provider_key} not found in configuration.", sys)
+        provider_ = os.getenv("LLM_PROVIDER", "google") 
+        provider = llm_block.get(provider_,"google")
+        if provider_ not in llm_block:
+            log.error(f"LLM provider {provider} not found in configuration.")
+            raise CustomException(f"LLM provider {provider} not found in configuration.", sys)
         
-
-        llm_config = llm_block[provider_key]
-        provider = llm_config.get("provider")
-        model_name = llm_config.get("model_name")
-        temperature = llm_config.get("temperature", 0.2)
-        max_tokens = llm_config.get("max_output_tokens", 2048)
+        
+        provider_name = provider.get("provider")
+        model_name = provider.get("model_name")
+        temperature = provider.get("temperature", 0.2)
+        max_tokens = provider.get("max_output_tokens", 2048)
 
         
         log.info(f"Loading LLM model: {model_name}")
-        if provider == "google":
+        if provider_name == "google":
             return ChatGoogleGenerativeAI(
                 model=model_name,
                 max_retries=3,
                 max_tokens= max_tokens,
                 temperature=temperature,
                 )
-        elif provider == "groq":
+        elif provider_name == "groq":
             return ChatGroq(
                 model=model_name,
                 max_retries=3,

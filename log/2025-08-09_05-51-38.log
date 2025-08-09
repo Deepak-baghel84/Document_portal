@@ -1,0 +1,7 @@
+ {"timestamp": "2025-08-09T00:21:40.215310Z", "level": "info", "event": "Directory created at: C:\\Genai_projects\\Document_portal\\data\\archive_pdfs\\test_session"}
+ {"timestamp": "2025-08-09T00:21:40.219640Z", "level": "info", "event": "PDF saved successfully at: C:\\Genai_projects\\Document_portal\\data\\archive_pdfs\\sample.pdf"}
+ {"timestamp": "2025-08-09T00:21:40.338018Z", "level": "info", "event": "PDF read successfully from: C:\\Genai_projects\\Document_portal\\data\\archive_pdfs\\sample.pdf"}
+ {"timestamp": "2025-08-09T00:21:40.342196Z", "level": "info", "event": "ModelLoader initialized successfully."}
+ {"timestamp": "2025-08-09T00:21:40.353748Z", "level": "info", "event": "Loading LLM model: gemini-1.5-flash"}
+ {"timestamp": "2025-08-09T00:21:40.450182Z", "level": "info", "event": "Starting document analysis..."}
+ {"timestamp": "2025-08-09T00:21:43.358124Z", "level": "info", "event": "Document analysis completed successfully."}

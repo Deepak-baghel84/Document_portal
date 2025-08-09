@@ -1,0 +1,5 @@
+ {"timestamp": "2025-08-09T00:06:17.003351Z", "level": "info", "event": "Directory created at: C:\\Genai_projects\\Document_portal\\data\\archive_pdfs\\test_session"}
+ {"timestamp": "2025-08-09T00:06:17.026824Z", "level": "info", "event": "PDF saved successfully at: C:\\Genai_projects\\Document_portal\\data\\archive_pdfs\\sample.pdf"}
+ {"timestamp": "2025-08-09T00:06:17.150165Z", "level": "info", "event": "PDF read successfully from: C:\\Genai_projects\\Document_portal\\data\\archive_pdfs\\sample.pdf"}
+ {"timestamp": "2025-08-09T00:06:17.154166Z", "level": "info", "event": "ModelLoader initialized successfully."}
+ {"timestamp": "2025-08-09T00:06:17.155166Z", "level": "error", "event": "Error initializing DataAnalysis: 'str' object has no attribute 'get'"}

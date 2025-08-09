@@ -1,0 +1,5 @@
+ {"timestamp": "2025-08-08T11:31:16.304038Z", "level": "info", "event": "Directory created at: C:\\Genai_projects\\Document_portal\\data\\archive_pdfs\\test_session"}
+ {"timestamp": "2025-08-08T11:31:16.312638Z", "level": "info", "event": "PDF saved successfully at: C:\\Genai_projects\\Document_portal\\data\\archive_pdfs\\sample.pdf"}
+ {"timestamp": "2025-08-08T11:31:16.447722Z", "level": "info", "event": "PDF read successfully from: C:\\Genai_projects\\Document_portal\\data\\archive_pdfs\\sample.pdf"}
+ {"timestamp": "2025-08-08T11:31:16.462059Z", "level": "info", "event": "Loading LLM model: None"}
+ {"timestamp": "2025-08-08T11:31:16.466245Z", "level": "error", "event": "Error initializing DataAnalysis: 1 validation error for ChatGoogleGenerativeAI\nmodel\n  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.8/v/string_type"}
