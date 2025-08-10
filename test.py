@@ -14,7 +14,7 @@ class DummnyFile:
     def getbuffer(self):
         return open(self._file_path, "rb").read()
 def main():
-    """Main function to run the data analysis on a sample PDF."""
+#    """Main function to run the data analysis on a sample PDF."""
     try:
         dummy_pdf = DummnyFile(pdf_path)
         print(f"Dummy PDF created with name: {dummy_pdf.name}")
@@ -32,5 +32,7 @@ def main():
         
     except CustomException as e:
         print(f"An error occurred: {e}")
+
+
 if __name__ == "__main__":
     main()
