@@ -12,6 +12,7 @@ ref_path = 'c:\\Genai_projects\\Document_portal\\Data\\Resume.pdf'
 
 
 class DummyFile():
+    """A dummy class to simulate file-like objects for testing."""
     def __init__(self,file_path):
         self.name = Path(file_path).name
         self._file_path = file_path
@@ -19,6 +20,7 @@ class DummyFile():
             return open(self._file_path, "rb").read()   
         
 if __name__ == "__main__":
+        
     try:
         act_file = DummyFile(act_path)
         ref_file = DummyFile(ref_path)
