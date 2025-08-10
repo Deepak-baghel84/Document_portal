@@ -15,7 +15,7 @@ class Ingestor(base_dir=None,session_file=None):
     
     def __init__(self, base_dir=None, session_file=None):
         try:
-            self.base_dir = base_dir, or os.getenv("DEFAULT_FILE_PATH", os.path.join(os.getcwd(), "data", "archive_pdfs"))
+            self.base_dir = base_dir or os.getenv("DEFAULT_FILE_PATH", os.path.join(os.getcwd(), "data", "archive_pdfs"))
             self.base__dir = Path(self.base_dir)
             self.sessionn_file = session_file or f"session_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
             self.session_path =  self.base_dir / self.sessionn_file
