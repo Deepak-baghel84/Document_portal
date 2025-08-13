@@ -10,5 +10,8 @@ Return ONLY valid JSON matching the exact schema below.
 Analyze this document:
 {document_text}
 """)
+
+Prompt_2 = ChatPromptTemplate.from_template()
 Prompt_directory = {
-    "document_analysis": prompt_1}
+    "document_analysis": prompt_1,
+    "document_comparision": Prompt_2}

@@ -1,3 +1,0 @@
- {"timestamp": "2025-08-08T09:15:38.649734Z", "level": "info", "event": "Directory created at: C:\\Genai_projects\\Document_portal\\data\\archive_pdfs\\test_session"}
- {"timestamp": "2025-08-08T09:15:38.655282Z", "level": "info", "event": "PDF saved successfully at: C:\\Genai_projects\\Document_portal\\data\\archive_pdfs\\sample.pdf"}
- {"timestamp": "2025-08-08T09:15:38.655282Z", "level": "error", "event": "Error reading PDF file: bad stream: type(stream)=<class 'str'>."}

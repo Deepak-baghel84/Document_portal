@@ -1,5 +1,0 @@
- {"timestamp": "2025-08-09T00:17:39.768653Z", "level": "info", "event": "Directory created at: C:\\Genai_projects\\Document_portal\\data\\archive_pdfs\\test_session"}
- {"timestamp": "2025-08-09T00:17:39.777443Z", "level": "info", "event": "PDF saved successfully at: C:\\Genai_projects\\Document_portal\\data\\archive_pdfs\\sample.pdf"}
- {"timestamp": "2025-08-09T00:17:39.901547Z", "level": "info", "event": "PDF read successfully from: C:\\Genai_projects\\Document_portal\\data\\archive_pdfs\\sample.pdf"}
- {"timestamp": "2025-08-09T00:17:39.905748Z", "level": "info", "event": "ModelLoader initialized successfully."}
- {"timestamp": "2025-08-09T00:17:39.906783Z", "level": "error", "event": "Error initializing DataAnalysis: unhashable type: 'dict'"}
