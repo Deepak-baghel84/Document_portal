@@ -1,13 +1,13 @@
 📂 Enterprise Document Portal
 
 An Enterprise Document Portal that enables seamless interaction with documents of various formats.
-This project provides three core functionalities:
+This project provides three main functionalities:
 
 1. 📑 Document Comparison – Compare two or more documents across multiple formats (PDF, TXT, DOCX, Images, etc.).
 
 2. 📊 Document Analysis – Extract insights, summaries, and patterns from documents for better understanding.
 
-3. 💬 Multi-Document Chat – Chat with multiple documents simultaneously, regardless of their format
+3. 💬 Document Chat – Chat with single or multiple documents simultaneously, regardless of their format.
 
 -------------------------------------------------------------------------------------------------------------
 
@@ -23,7 +23,7 @@ This project provides three core functionalities:
 
 * Modular and extendable codebase for future enhancements.
 
-=================================================================================================================
+===========================================================================
 
 🛠️ Tech Stack
 
@@ -35,7 +35,7 @@ This project provides three core functionalities:
 
 * Deployment (Future): AWS
 
---------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 
 📂 Project Structure
 
