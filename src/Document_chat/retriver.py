@@ -11,6 +11,7 @@ from pathlib import Path
 import sys
 from langchain_core.documents import Document
 from operator import itemgetter
+from dotenv import load_dotenv
 
 
 
@@ -22,6 +23,7 @@ class DocumentRetriever:
         :param session_id: Unique identifier for the session, defaults to current timestamp.
         """
         try:
+            self.load_dotenv()
             self.log = CustomLogger.get_logger(__name__)
             self.retriver = retriver
             self.parser = StrOutputParser()
@@ -33,7 +35,7 @@ class DocumentRetriever:
             self.rewriter_prompt = PROMPT_REGISTRY.get(PromptType.CONTEXTUALIZE_QUESTION.value)
 
             self.log.info("DocumentRetriever successfully initialized")
-
+            self._built_lcel_chain()
         except Exception as e:
             self.log.error("Error in initialization DocumentRetriever")
             raise (e, sys)
@@ -60,7 +62,7 @@ class DocumentRetriever:
             raise (e, sys)
 
 
-    def _create_retrivel(self, documents):
+    def _create_retrivel(self,documents):
         """
         Builds a LangChain retriever using the provided documents.
         :param documents: List of Document objects to be used for retrieval.
@@ -80,7 +82,7 @@ class DocumentRetriever:
         
 
 
-    def _built_lcel_chain(self,):
+    def _built_lcel_chain(self):
         try:
             # 1) Rewrite user question with chat history context
             question_rewritter = {"user_input":itemgetter("user_input"),"chat_history":itemgetter("chat_history")} | self.rewriter_prompt | self.llm | self.parser
@@ -88,7 +90,9 @@ class DocumentRetriever:
             # 2) Retrieve relevant documents based on the rewritten question
             if self.retriver is None:
                 self.log.error("Retriever is not initialized")
-                raise CustomException("Retriever is not initialized", sys)
+                #self.retriver = self._create_retrivel(self.documents)
+                #if self.retriver is None:
+                 #   raise CustomException("Retriever is not created", sys)
             retriving_doc_chain = question_rewritter | self.retriver | self._format_doc
             self.log.info("LCEL chain successfully built")
             # 3) Main chain that combines the rewritten question, retrieved documents, and chat history

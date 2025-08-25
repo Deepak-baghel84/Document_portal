@@ -1,9 +1,9 @@
 from logger.custom_logger import CustomLogger
 from exception.custom_exception import CustomException 
-from pypdf import PyPDFLoader 
+from langchain_community.document_loaders import PyPDFLoader
 from pathlib import Path 
 import sys 
-from langchain.text_splitter import CharacterTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from datetime import datetime
 from utills.model_utils import ModelLoader
 from langchain_community.vectorstores import FAISS
@@ -15,6 +15,7 @@ from langchain.document_loaders import TextLoader, Docx2txtLoader
 
 
 class DocumentIngestor:
+    accepted_file_format = {".pdf",".txt",".md",".docs"}
     def __init__(self,file_path:str="Data//multidoc_archive",session_id:str=None,faiss_index_path:str=None):
         """
         Initializes the DocumentIngestor with paths for file storage and FAISS index.
@@ -22,7 +23,7 @@ class DocumentIngestor:
         :param session_id: Unique identifier for the session, defaults to current timestamp.
         :param faiss_index_path: Directory where FAISS index will be stored.
         """
-        accepted_file_format = {".pdf",".txt",".md",".docs"}
+        
         try:
             self.log = CustomLogger.get_logger(__name__)
             self.file_path = Path(file_path)
@@ -39,6 +40,7 @@ class DocumentIngestor:
             self.model = ModelLoader()
             
             self.log.info("DocumentIngestor successfully initialized")
+            
           
 
         except Exception as e:
@@ -49,7 +51,7 @@ class DocumentIngestor:
         try:
             documents = []
             for file in uploaded_files:
-                if file.suffix.lower() not in {".pdf",".txt",".md",".docs"}:
+                if file.suffix.lower() not in self.accepted_file_format:
                     self.log.error(f"Unsupported file format: {file.suffix}")
                     continue
                 new_file_path = self.temp_path / Path(file.name)
@@ -77,7 +79,7 @@ class DocumentIngestor:
         
     def create_retrivel(self,documents):
         try:
-            text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+            text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
             split_docs = text_splitter.split_documents(documents)
             self.log.info(f"Documents splited into {len(split_docs)} chunks")
 
