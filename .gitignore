@@ -1,7 +1,44 @@
 myenv
 .env
 
-document_portal.egg-info
-".env" 
+document_po# Python cache & virtualenv
+__pycache__/
+*.py[cod]
+*.so
+*.pyd
+*.pyo
+env/
+venv/
+*.egg-info/
+*.egg
+*.log
+
+# OS & editor files
+.DS_Store
+.vscode/
+.idea/
+
+# LangChain-related
+faiss_index/
+*.faiss
+*.pkl
+
+# Data & archive
+Data/
+archive_dir/
+main_archive/
+*.pdf
+check.py
+
+# Secrets & configs
 .env
-Data
+.env.*
+
+# Logs
+logs/
+*.log
+
+# Build/Dist
+dist/
+build/
+document_portal.egg-info/
