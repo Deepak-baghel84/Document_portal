@@ -14,7 +14,7 @@ def test_doc_chat():
         uploaded_files = []
         for file_path in file_paths:
              if Path(file_path).exists():
-                 uploaded_files.append(open(file_path, "rb"))
+                 uploaded_files.append(open(file_path, "rb"))  # to perform read operation adding file path in open mode
              else:
                  print(f"File does not exist: {file_path}")
             

@@ -9,6 +9,7 @@ from utills.model_utils import ModelLoader
 from langchain_community.vectorstores import FAISS
 from datetime import datetime,timezone
 import uuid
+import os
 
 
 
@@ -16,7 +17,7 @@ import uuid
 
 class DocumentIngestor:
     #accepted_file_format = {".pdf",".txt",".md",".docs"}
-    def __init__(self,file_path:str="Data//multidoc_archive",session_id:str=None,faiss_index_path:str=None):
+    def __init__(self,file_path:str="Data//multidoc_archive",session_id:str=None,faiss_index_path:str="Data//faiss_index"):
         """
         Initializes the DocumentIngestor with paths for file storage and FAISS index.
         :param file_path: Directory where documents will be stored.
@@ -25,17 +26,16 @@ class DocumentIngestor:
         """
         
         try:
-            
             self.file_path = Path(file_path)
             self.faiss_index_path = Path(faiss_index_path)
             self.file_path.mkdir(parents=True,exist_ok =True)
             self.faiss_index_path.mkdir(parents=True,exist_ok=True)
 
-            self.session_id_ = session_id or str(datetime.now(timezone.utc).timestamp())
+            self.session_id_ = session_id or f"session_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
             self.session_id = Path(self.session_id_)
-            self.temp_path = self.file_path / Path(self.session_id)
-            self.session_faiss_index = self.faiss_index_path / Path(self.session_id)
-            self.session_id.mkdir(parents=True,exist_ok=True)
+            self.temp_path = self.file_path / self.session_id
+            self.session_faiss_index = self.faiss_index_path / self.session_id
+            self.temp_path.mkdir(parents=True,exist_ok=True)
             self.session_faiss_index.mkdir(parents=True,exist_ok=True)
 
             self.model = ModelLoader()
@@ -52,26 +52,31 @@ class DocumentIngestor:
         try:
             documents = []
             for file in uploaded_files:
-                if file.suffix.lower() not in {".pdf", ".txt", ".docs"}:
-                    log.error(f"Unsupported file format: {file.suffix}")
+                file_name = os.path.basename(file.name)
+                if Path(file_name).suffix.lower() not in {".pdf", ".txt", ".docs"}:
+                    log.error(f"Unsupported file format: {Path(file_name).suffix}")
                     continue
-                new_file_path = self.temp_path / Path(file.name)
+                new_file_path = self.temp_path / file_name    # problem in file name
                 with open(new_file_path, 'wb') as f:
                     f.write(file.read())
 
-                if file.suffix.lower() == ".pdf":
+                if Path(file_name).suffix.lower() == ".pdf":
                     loader = PyPDFLoader(str(new_file_path))
-                elif file.suffix.lower() == ".txt":
+                elif Path(file_name).suffix.lower() == ".txt":
                     loader = TextLoader(str(new_file_path), encoding="utf-8")
-                elif file.suffix.lower() == ".docs":
+                elif Path(file_name).suffix.lower() == ".docs":
                     loader = Docx2txtLoader(str(new_file_path))
                 else:
                     log.warning(f"Unsupported file format: {file.suffix}")
                     continue
                 docs = loader.load()
-                docs.extend(documents)
+                documents.extend(docs)
+                log.info(f"Loaded {len(docs)} pages from {file_name}")
 
-
+            if documents == []:
+                log.error("No valid documents were loaded.")
+                raise CustomException("No valid documents were loaded.", sys)
+            
             log.info(f"Files saved successfully at {self.temp_path} and loaded into documents list")
             return documents
         except Exception as e:
@@ -84,7 +89,7 @@ class DocumentIngestor:
             split_docs = text_splitter.split_documents(documents)
             log.info(f"Documents splited into {len(split_docs)} chunks")
 
-            self.embedding = self.model.load_embeddings()
+            self.embedding = self.model.load_embedding()
             self.vectorstore = FAISS.from_documents(split_docs, self.embedding)
             self.vectorstore.save_local(self.session_faiss_index)
             log.info(f"FAISS index built and saved at {self.session_faiss_index}")

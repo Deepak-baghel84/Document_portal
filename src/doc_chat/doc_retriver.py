@@ -6,8 +6,8 @@ from typing import Optional,List
 from logger import GLOBAL_LOGGER as log
 from exception.custom_exception import CustomException
 from utills.model_utils import ModelLoader
-#from prompt.prompt_analyzer import PROMPT_REGISTRY
-#from model.base_model import PromptType,SummaryResponse
+from prompt.prompt_analyzer import PROMPT_REGISTRY
+from model.base_model import PromptType,SummaryResponse
 from pathlib import Path
 import sys
 from langchain_core.documents import Document
@@ -31,8 +31,8 @@ class DocumentRetriever:
             self.model = ModelLoader()
             self.llm = self.model.load_llm()
             self.embeddings = self.model.load_embedding()
-          #  self.qa_prompt = PROMPT_REGISTRY.get(PromptType.CONTEXT_QA.value)
-          #  self.rewriter_prompt = PROMPT_REGISTRY.get(PromptType.CONTEXTUALIZE_QUESTION.value)
+            self.qa_prompt = PROMPT_REGISTRY.get(PromptType.CONTEXT_QA.value)
+            self.rewriter_prompt = PROMPT_REGISTRY.get(PromptType.CONTEXTUALIZE_QUESTION.value)
 
             log.info("DocumentRetriever successfully initialized")
             self._built_lcel_chain()
@@ -59,7 +59,7 @@ class DocumentRetriever:
             log.info("Documents invoke successfully")
         except Exception as e:
             log.error("Error in initialization DocumentRetriever")
-            raise (e, sys)
+            raise CustomException(f"Error generating answer in invoke: {e}", sys)
 
 
     def _create_retrivel(self,documents):

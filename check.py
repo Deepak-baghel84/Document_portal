@@ -1,3 +1,4 @@
+import test
 from utills.config_util import load_config
 import os
 from logger.custom_logger import CustomLogger
@@ -20,21 +21,39 @@ import datetime
 #test_load_config()
 
 
-def test_log(log_dir='log'):
-        """
-        Initialize the custom logger.
+#def test_log(log_dir='log'):
         
-        :param log_dir: Directory where log files will be stored.
-        """
-        log_file = os.path.join(os.getcwd(), log_dir)
-        os.makedirs(log_file, exist_ok=True)
-        print(log_file)
+#    Initialize the custom logger.
+#    :param log_dir: Directory where log files will be stored.
+        
+        #log_file = os.path.join(os.getcwd(), log_dir)
+        ##os.makedirs(log_file, exist_ok=True)
+        #print(log_file)
         
         # Create a log file with the current date and time
-        log_file_name = f"{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log"
-        print(log_file_name)
-        log_file_path = os.path.join(log_file, log_file_name)
-        print(log_file_path)
+       # log_file_name = f"{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log"
+       # print(log_file_name)
+       # log_file_path = os.path.join(log_file, log_file_name)
+       # print(log_file_path)
     
 
-test_log()
+#test_log()
+def test_file_existence():
+      file_paths = ["Data//Resume.pdf","Data//Sample.pdf","Data//Deepak_Baghel_Resume.pdf"]
+      from pathlib import Path
+      uploaded_files = []
+      for file_path in file_paths:
+          if Path(file_path).exists():
+              uploaded_files.append(open(file_path, "rb"))
+          else:
+              print(f"File does not exist: {file_path}")
+              
+
+      for file in uploaded_files:         # file= <_io.BufferedReader name='Data//Resume.pdf'>
+       # print(Path(file.name))
+        file_name = os.path.basename(file.name)    
+        print(Path(file_name).suffix)
+        print(file.read(100))
+                                              
+test_file_existence()
+
