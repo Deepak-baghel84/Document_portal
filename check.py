@@ -1,8 +1,28 @@
+from src.doc_chat.doc_retriver import DocumentRetriever
+from src.doc_ingestion.data_ingestion import DocumentIngestor
+
 import test
 from utills.config_util import load_config
 import os
 from logger.custom_logger import CustomLogger
 import datetime
+from multiprocessing.managers import BaseManager
+from langchain_core.messages import BaseMessage
+from langchain_community.vectorstores import FAISS
+from langchain_core.output_parsers import StrOutputParser
+from typing import Optional,List
+from logger import GLOBAL_LOGGER as log
+from exception.custom_exception import CustomException
+from utills.model_utils import ModelLoader
+from prompt.prompt_analyzer import PROMPT_REGISTRY
+from model.base_model import PromptType,SummaryResponse
+from pathlib import Path
+import sys
+from langchain_core.documents import Document
+from operator import itemgetter
+from dotenv import load_dotenv
+
+
 
 
 ##    checking the config by loading it
@@ -40,6 +60,7 @@ import datetime
 #test_log()
 def test_file_existence():
       file_paths = ["Data//Resume.pdf","Data//Sample.pdf","Data//Deepak_Baghel_Resume.pdf"]
+      
       from pathlib import Path
       uploaded_files = []
       for file_path in file_paths:
@@ -53,7 +74,7 @@ def test_file_existence():
        # print(Path(file.name))
         file_name = os.path.basename(file.name)    
         print(Path(file_name).suffix)
-        print(file.read(100))
+       # print(file.read(100))
                                               
 test_file_existence()
 

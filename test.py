@@ -6,6 +6,9 @@ from pathlib import Path
 import sys
 
 
+
+
+
 def test_doc_chat():
     try:
         file_paths = ["Data//Resume.pdf","Data//Sample.pdf","Data//Deepak_Baghel_Resume.pdf"]
@@ -21,11 +24,11 @@ def test_doc_chat():
         documents = ingestor.ingest_file(uploaded_files)
   
         retriver = ingestor.create_retrivel(documents)
-        doc_retriver = DocumentRetriever(retriver=retriver)
-        for file in uploaded_files:
-            file.close()
-        answer = doc_retriver.invoke(user_query="What is the document about?")
-        print(answer)
+     #   doc_retriver = DocumentRetriever(retriver=retriver)
+     #   for file in uploaded_files:
+      #      file.close()
+     #   answer = doc_retriver.invoke(user_query="What is the document about?")
+     #   print(answer)
     except Exception as e:
         raise CustomException(e,sys)
     

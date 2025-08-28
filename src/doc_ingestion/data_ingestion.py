@@ -39,6 +39,7 @@ class DocumentIngestor:
             self.session_faiss_index.mkdir(parents=True,exist_ok=True)
 
             self.model = ModelLoader()
+            self.embed = self.model.load_embedding()
             
             log.info("DocumentIngestor successfully initialized")
             
@@ -88,8 +89,6 @@ class DocumentIngestor:
             text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
             split_docs = text_splitter.split_documents(documents)
             log.info(f"Documents splited into {len(split_docs)} chunks")
-
-            self.embedding = self.model.load_embedding()
             self.vectorstore = FAISS.from_documents(split_docs, self.embedding)
             self.vectorstore.save_local(self.session_faiss_index)
             log.info(f"FAISS index built and saved at {self.session_faiss_index}")
@@ -97,8 +96,8 @@ class DocumentIngestor:
             retriver = self.vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 5})
             return retriver
         except Exception as e:
-            log.error(f"Error building LCEL chain: {e}")
-            raise CustomException(f"Error building LCEL chain: {e}", sys)
+            log.error(f"Error in creating retrivel: {e}")
+            raise CustomException(f"Error building retriver: {e}", sys)
         
 
 
