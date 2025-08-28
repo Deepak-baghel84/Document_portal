@@ -72,7 +72,7 @@ class DocumentIngestor:
                     continue
                 docs = loader.load()
                 documents.extend(docs)
-                log.info(f"Loaded {len(docs)} pages from {file_name}")
+                #log.info(f"Loaded {len(docs)} pages from {file_name}")
 
             if documents == []:
                 log.error("No valid documents were loaded.")
@@ -89,7 +89,7 @@ class DocumentIngestor:
             text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
             split_docs = text_splitter.split_documents(documents)
             log.info(f"Documents splited into {len(split_docs)} chunks")
-            self.vectorstore = FAISS.from_documents(split_docs, self.embedding)
+            self.vectorstore = FAISS.from_documents(split_docs, self.embed)
             self.vectorstore.save_local(self.session_faiss_index)
             log.info(f"FAISS index built and saved at {self.session_faiss_index}")
 

@@ -1,5 +1,6 @@
 import os
 import sys
+from turtle import mode
 from dotenv import load_dotenv
 
 from logger.custom_logger import CustomLogger
@@ -9,8 +10,8 @@ from utills.config_util import load_config
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_groq import ChatGroq
+from logger import GLOBAL_LOGGER as log
 
-log = CustomLogger().get_logger(__name__)
 
 
 
@@ -45,16 +46,18 @@ class ModelLoader:
         """Loads the embedding model based on the configuration settings."""
         try:
           model_name = self.config.get("embedding_model", "google")
+          if not model_name:
+                raise CustomException("Embedding model configuration is missing.", sys)
           log.info(f"Loading embedding model: {model_name}")
-          if model_name == "google":
+          if model_name.get('provider') == "google":
               return GoogleGenerativeAIEmbeddings(
-                  model=self.config["google_embedding_model"],
+                  model=model_name.get("model"),
                   max_retries=3,
-                  max_tokens=self.config["max_tokens"]
+                  max_tokens=model_name.get("max_tokens",4096)
               )
-          elif model_name == "groq":
+          elif model_name.get('provider') == "groq":
               return ChatGroq(
-                  model=self.config["groq_embedding_model"],
+                  model=self.config.get["groq_embedding_model"],
                   max_retries=3,
                   max_tokens=self.config["max_tokens"]
               )
@@ -103,5 +106,6 @@ class ModelLoader:
      
 
 
-if __name__ == "__main__":
-    loader = ModelLoader()
+#if __name__ == "__main__":
+ #   loader = ModelLoader()
+  #  embed = loader.load_embedding()

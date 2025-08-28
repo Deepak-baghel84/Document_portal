@@ -18,6 +18,8 @@ document:
 embedding_model:
   provider: "google"
   model: "models/text-embedding-004"
+  max_output_tokens: 2048
+  max_tokens: 4096
 
 llm:
   groq:

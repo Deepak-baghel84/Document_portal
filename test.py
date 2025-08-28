@@ -24,7 +24,7 @@ def test_doc_chat():
         documents = ingestor.ingest_file(uploaded_files)
   
         retriver = ingestor.create_retrivel(documents)
-     #   doc_retriver = DocumentRetriever(retriver=retriver)
+        doc_retriver = DocumentRetriever(retriver=retriver)
      #   for file in uploaded_files:
       #      file.close()
      #   answer = doc_retriver.invoke(user_query="What is the document about?")

@@ -24,7 +24,7 @@ class DocumentRetriever:
         :param session_id: Unique identifier for the session, defaults to current timestamp.
         """
         try:
-            self.load_dotenv()
+            load_dotenv()
             self.retriver = retriver
             self.parser = StrOutputParser()
             self.session_id = session_id or "document_chat_session"
