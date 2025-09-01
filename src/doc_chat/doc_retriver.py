@@ -14,6 +14,7 @@ from langchain_core.documents import Document
 from operator import itemgetter
 from dotenv import load_dotenv
 
+load_dotenv()
 
 
 class DocumentRetriever:
@@ -24,7 +25,7 @@ class DocumentRetriever:
         :param session_id: Unique identifier for the session, defaults to current timestamp.
         """
         try:
-            load_dotenv()
+            
             self.retriver = retriver
             self.parser = StrOutputParser()
             self.session_id = session_id or "document_chat_session"
@@ -53,12 +54,12 @@ class DocumentRetriever:
                 log.error("Retriever is not initialized")
                 raise CustomException("Retriever is not initialized", sys)
             log.info("Retrieving relevant documents for the query")
-            response = self.main_chain.invoke(self.payload)
+            response = self.main_chain.invoke(self.payload) 
             if not response:
                 log.warning("no response from main chain invoke")
             log.info("Documents invoke successfully")
         except Exception as e:
-            log.error("Error in initialization DocumentRetriever")
+            log.error("Error in invoking DocumentRetriever")
             raise CustomException(f"Error generating answer in invoke: {e}", sys)
 
 

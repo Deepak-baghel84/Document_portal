@@ -25,10 +25,10 @@ def test_doc_chat():
   
         retriver = ingestor.create_retrivel(documents)
         doc_retriver = DocumentRetriever(retriver=retriver)
-     #   for file in uploaded_files:
-      #      file.close()
-     #   answer = doc_retriver.invoke(user_query="What is the document about?")
-     #   print(answer)
+        for file in uploaded_files:
+            file.close()
+        answer = doc_retriver.invoke(user_query="What is the documents about?")
+        print(answer)
     except Exception as e:
         raise CustomException(e,sys)
     
