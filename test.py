@@ -27,7 +27,7 @@ def test_doc_chat():
         doc_retriver = DocumentRetriever(retriver=retriver)
         for file in uploaded_files:
             file.close()
-        answer = doc_retriver.invoke(user_query="What is the documents about?")
+        answer = doc_retriver.Invoke(user_query="What is the documents about?")
         print(answer)
     except Exception as e:
         raise CustomException(e,sys)
