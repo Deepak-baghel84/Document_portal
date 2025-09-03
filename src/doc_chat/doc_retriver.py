@@ -16,6 +16,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+class FaissManager():
+    pass
 
 class DocumentRetriever:
     def __init__(self, retriver, session_id: str = None):
@@ -42,22 +44,39 @@ class DocumentRetriever:
             raise (e, sys)
         
 
-    def invoke(self,user_query:str,chat_history:Optional[List[BaseMessage]]=None):
+    def Invoke(self,user_query:str,chat_history:Optional[List[BaseMessage]]=None):
         try:
             if self.main_chain is None:
                 raise CustomException(
                     "RAG chain not initialized. Call load_retriever_from_faiss() before invoke().", sys)
             self.chat_history = chat_history or []
             self.payload = {"user_input":user_query, "chat_history":self.chat_history}
+
             if self.retriver is None:
                 #retriver = self._create_retrivel(self.documents)
                 log.error("Retriever is not initialized")
                 raise CustomException("Retriever is not initialized", sys)
-            log.info("Retrieving relevant documents for the query")
-            response = self.main_chain.invoke(self.payload) 
-            if not response:
-                log.warning("no response from main chain invoke")
-            log.info("Documents invoke successfully")
+            rewritten = self.question_rewritter.invoke(self.payload)
+            log.info(f"Rewritten question: {rewritten}")
+            if not rewritten or not rewritten.strip():
+               rewritten = user_query   # fallback: use original
+
+            docs = self.retriver.invoke(rewritten) if self.retriver else []
+            log.info(f"Retrieved {len(docs)} documents")
+            if docs:
+                context = self._format_doc(docs)
+            else:
+                context = "No relevant context available."
+
+            final_payload = {
+             "context": context,
+             "user_input": user_query,
+            "chat_history": chat_history or []
+           }
+
+            response = self.main_chain.invoke(final_payload)
+            log.info("Successfully generated answer from DocumentRetriever")
+            return response
         except Exception as e:
             log.error("Error in invoking DocumentRetriever")
             raise CustomException(f"Error generating answer in invoke: {e}", sys)
@@ -86,18 +105,11 @@ class DocumentRetriever:
     def _built_lcel_chain(self):
         try:
             # 1) Rewrite user question with chat history context
-            question_rewritter = {"user_input":itemgetter("user_input"),"chat_history":itemgetter("chat_history")} | self.rewriter_prompt | self.llm | self.parser
+            self.question_rewritter = {"user_input":itemgetter("user_input"),"chat_history":itemgetter("chat_history")} | self.rewriter_prompt | self.llm | self.parser
             log.info("Question rewriting chain successfully built")
-            # 2) Retrieve relevant documents based on the rewritten question
-            if self.retriver is None:
-                log.error("Retriever is not initialized")
-                #self.retriver = self._create_retrivel(self.documents)
-                #if self.retriver is None:
-                 #   raise CustomException("Retriever is not created", sys)
-            retriving_doc_chain = question_rewritter | self.retriver | self._format_doc
-            log.info("LCEL chain successfully built")
-            # 3) Main chain that combines the rewritten question, retrieved documents, and chat history
-            self.main_chain = {"context": retriving_doc_chain,"user_input":itemgetter("user_input"),"chat_history":itemgetter("chat_history")} | self.qa_prompt | self.llm | self.parser
+            
+            # 2) Main chain that combines the rewritten question, retrieved documents, and chat history
+            self.main_chain = {"context": itemgetter("context"),"user_input":itemgetter("user_input"),"chat_history":itemgetter("chat_history")} | self.qa_prompt | self.llm | self.parser
             log.info("Main lcel chain successfully built")
         except:
             log.error("Error building LCEL chain")
@@ -120,3 +132,14 @@ class DocumentRetriever:
         except Exception as e:
             log.error(f"Error formatting documents: {e}")
             raise CustomException(f"Error formatting documents: {e}", sys)
+        
+
+
+
+class AnalyzerIngestor():
+    pass
+
+
+
+class CompareIngestor():
+    pass

@@ -37,7 +37,7 @@ contextualize_question_prompt = ChatPromptTemplate.from_messages([
         "question if necessary; otherwise, return it unchanged."
     )),
     MessagesPlaceholder("chat_history"),
-    ("human", "{input}"),
+    ("human", "{user_input}"),
 ])
 # Prompt for answering based on context
 context_qa_prompt = ChatPromptTemplate.from_messages([
@@ -47,7 +47,7 @@ context_qa_prompt = ChatPromptTemplate.from_messages([
         "Keep your answer concise and no longer than three sentences.\n\n{context}"
     )),
     MessagesPlaceholder("chat_history"),
-    ("human", "{input}"),
+    ("human", "{user_input}"),
 ])
 
 # Central dictionary to register prompts
