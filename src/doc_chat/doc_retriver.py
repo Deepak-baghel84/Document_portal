@@ -16,8 +16,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-class FaissManager():
-    pass
 
 class DocumentRetriever:
     def __init__(self, retriver, session_id: str = None):
@@ -136,10 +134,3 @@ class DocumentRetriever:
 
 
 
-class AnalyzerIngestor():
-    pass
-
-
-
-class CompareIngestor():
-    pass

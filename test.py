@@ -1,37 +1,37 @@
 import os 
-from src.doc_ingestion.data_ingestion import DocumentIngestor
-from src.doc_chat.doc_retriver import DocumentRetriever
+from src.doc_analyzer.analyzer import DataAnalysis
+from src.doc_ingestion.data_ingestion import CompareIngestor 
 from exception.custom_exception import CustomException
 from pathlib import Path
-import sys
+
+act_path = Path('c:\\Genai_projects\\Document_portal\\Data\\Deepak_Baghel_Resume.pdf')
+ref_path = Path('c:\\Genai_projects\\Document_portal\\Data\\Resume.pdf')
 
 
 
-
-
-def test_doc_chat():
-    try:
-        file_paths = ["Data//Resume.pdf","Data//Sample.pdf","Data//Deepak_Baghel_Resume.pdf"]
-       
-        ingestor = DocumentIngestor(file_path="Data//multidoc_archive",faiss_index_path="vector_store")
-        uploaded_files = []
-        for file_path in file_paths:
-             if Path(file_path).exists():
-                 uploaded_files.append(open(file_path, "rb"))  # to perform read operation adding file path in open mode
-             else:
-                 print(f"File does not exist: {file_path}")
-            
-        documents = ingestor.ingest_file(uploaded_files)
-  
-        retriver = ingestor.create_retrivel(documents)
-        doc_retriver = DocumentRetriever(retriver=retriver)
-        for file in uploaded_files:
-            file.close()
-        answer = doc_retriver.Invoke(user_query="What is the documents about?")
-        print(answer)
-    except Exception as e:
-        raise CustomException(e,sys)
-    
-
+class DummyFile():
+    """A dummy file class to simulate file operations for testing purposes."""
+    def __init__(self,file_path: Path):
+        self.name = Path(file_path).name
+        self._read_buffer = file_path.read_bytes()
+    def get_buffer(self):
+        return self._read_buffer  
+        
 if __name__ == "__main__":
-    test_doc_chat()
+        
+    try:
+        act_file = DummyFile(act_path)
+        ref_file = DummyFile(ref_path)
+        print(f"Dummy PDF created with name: {act_file.name}")
+        file_handler = CompareIngestor()
+        save_pdf_path = file_handler.save_pdf_files(ref_file,act_file)
+        print(f"PDFs saved at: {save_pdf_path}") 
+        text_content = file_handler.combine_pdf_text()
+        print(f"Content read from PDFS: {text_content[:100]}...")  # Print first 100 characters for brevity
+        
+    except CustomException as e:
+        print(f"An error occurred: {e}")
+
+
+     
+

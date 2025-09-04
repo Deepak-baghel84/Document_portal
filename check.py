@@ -1,7 +1,7 @@
 from src.doc_chat.doc_retriver import DocumentRetriever
 from src.doc_ingestion.data_ingestion import DocumentIngestor
 
-import test
+import test.test as test
 from utills.config_util import load_config
 import os
 from logger.custom_logger import CustomLogger

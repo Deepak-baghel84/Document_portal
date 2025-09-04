@@ -12,6 +12,7 @@ from datetime import datetime,timezone
 import uuid
 import os
 import shutil
+from pypdf import PdfReader
 
 
 
@@ -167,7 +168,7 @@ class AnalyzeIngestor():
 
 
 class CompareIngestor():
-    def __init__(self, dir_path: str = "Data//analyzer_archive", session_id: str = None):
+    def __init__(self, dir_path: str = "Data//comparator_archive", session_id: str = None):
         """
         Initialize the DataIngestion class with file path and session ID.
         :param file_path: Path to the PDF file to be processed.
@@ -176,7 +177,7 @@ class CompareIngestor():
         try:
             # Set base directory for saving PDFs
             self.base_dir = dir_path or os.getenv("DEFAULT_FILE_PATH", os.path.join(os.getcwd(), "data", "archive_pdfs"))
-            self.base__dir = Path(self.base_dir)
+            
             self.sessionn_file = session_id or f"session_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
             self.session_path = Path(self.base_dir) / Path(self.sessionn_file)
             self.session_path.mkdir(parents=True, exist_ok=True)
@@ -201,7 +202,7 @@ class CompareIngestor():
             with open(act_save_path, 'wb') as file:
                 file.write(self.act_file.get_buffer())
             log.info(f"PDF files saved successfully at: {self.session_path}")
-            return ref_save_path, act_save_path
+            #return ref_save_path, act_save_path
 
         except FileNotFoundError as e:
             log.error(f"File not found: {e}")
@@ -213,21 +214,21 @@ class CompareIngestor():
         :return: Text content of the PDF file.
         """
         try:
-            data_block = [" "]
+            data_block = []
             number = 1
             with open(file_path, 'rb') as file:
                 reader = PdfReader(file)
                 for page in reader.pages:
                     text = page.extract_text()
                     if text.strip():
-                        data_block.append(f"Page ---{number}---: \n{text}")
+                        data_block.append(f"file-Page ---{number}---: \n{text}")
                     number += 1
                        
             if not data_block:
                 raise ValueError("No text found in the PDF file.")
             
             log.info(f"PDF read successfully from: {file_path}")
-            if data_block == [" "]:
+            if data_block == []:
                 raise ValueError("PDF file is empty or could not be read.")
             return "\n".join(data_block)
         except FileNotFoundError as e:
@@ -242,12 +243,14 @@ class CompareIngestor():
         :return: Combined text content.
         """
         try:
+            documents = [
 
+            ]
             for pdf_file in sorted(self.session_path.iterdir()):
                 if pdf_file.suffix.lower() == '.pdf':
                     content = self.read_pdf(pdf_file)
-
-            combined_text = "\n".join(content)
+                documents.append(content)
+            combined_text = "\n".join(documents)
             if not combined_text:
                 raise ValueError("No text found in the PDF files.")
             log.info("PDF text combined successfully.")

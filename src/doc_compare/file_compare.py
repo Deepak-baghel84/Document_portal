@@ -1,8 +1,8 @@
-from logger.custom_logger import CustomLogger
+from logger import GLOBAL_LOGGER as log
 from exception.custom_exception import CustomException
 from langchain_core.output_parsers import JsonOutputParser
 from langchain.output_parsers import OutputFixingParser
-from prompt.prompt_analyzer import Prompt_directory
+from prompt.prompt_analyzer import PROMPT_REGISTRY
 from utills.model_utils import ModelLoader
 from model.base_model import SummaryResponse,PromptType
 import sys
@@ -14,7 +14,6 @@ class DocumentCompare:
     def __init__(self):
         try:
           load_dotenv()
-          self.log = CustomLogger.get_logger(__name__)
           self.loader = ModelLoader()
           self.llm = self.loader.load_llm()
           self.parser = JsonOutputParser(pydantic_object=SummaryResponse)
@@ -23,11 +22,11 @@ class DocumentCompare:
               llm=self.llm
           )
           self.parser = JsonOutputParser(pydantic_object=PromptType)
-          self.prompt = Prompt_directory[f"PromptType.DOCUMENT_COMPARISON.value"]
+          self.prompt = PROMPT_REGISTRY.get(PromptType.DOCUMENT_COMPARISON.value)
           self.chain = self.prompt | self.llm | self.parser
-          self.log.info("DocumentCompare initialized successfully.")
+          log.info("DocumentCompare initialized successfully.")
         except Exception as e:
-            self.log.error(f"Error initializing DocumentCompare: {e}")
+            log.error(f"Error initializing DocumentCompare: {e}")
             raise CustomException("Error in initialization of DocumentCompare file", sys)
            
     def Document_compare(self,combined_text:str)->pd.Dataframe:
@@ -36,10 +35,10 @@ class DocumentCompare:
                       "format_instruction":self.parser.get_format_instructions()}
         
             response = self.chain.invoke(inputs)
-            self.log(f"Document comparision have completed successfully.")
+            log(f"Document comparision have completed successfully.")
             self._format_response(response)
         except Exception as e:
-            self.log(f"Document comparision have an issue: {e}")
+            log(f"Document comparision have an issue: {e}")
             raise CustomException("Document_compare have an issue ",sys)
 
 
@@ -48,5 +47,5 @@ class DocumentCompare:
             df = pd.DataFrame(response_parsed)
             return df
         except Exception as e:
-            self.log.error("Error formatting response into DataFrame", error=str(e))
+            log.error("Error formatting response into DataFrame", error=str(e))
             CustomException("Error formatting response", sys)
