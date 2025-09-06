@@ -1,7 +1,8 @@
+from email.mime import base
 from src.doc_chat.doc_retriver import DocumentRetriever
 from src.doc_ingestion.data_ingestion import DocumentIngestor
 
-import test.test as test
+import shutil
 from utills.config_util import load_config
 import os
 from logger.custom_logger import CustomLogger
@@ -58,23 +59,52 @@ from dotenv import load_dotenv
     
 
 #test_log()
-def test_file_existence():
-      file_paths = ["Data//Resume.pdf","Data//Sample.pdf","Data//Deepak_Baghel_Resume.pdf"]
+#def test_file_existence():
+#      file_paths = ["Data//Resume.pdf","Data//Sample.pdf","Data//Deepak_Baghel_Resume.pdf"]
       
-      from pathlib import Path
-      uploaded_files = []
-      for file_path in file_paths:
-          if Path(file_path).exists():
-              uploaded_files.append(open(file_path, "rb"))
-          else:
-              print(f"File does not exist: {file_path}")
+#      from pathlib import Path
+#      uploaded_files = []
+#      for file_path in file_paths:
+#          if Path(file_path).exists():
+#              uploaded_files.append(open(file_path, "rb"))
+#          else:
+#              print(f"File does not exist: {file_path}")
               
 
-      for file in uploaded_files:         # file= <_io.BufferedReader name='Data//Resume.pdf'>
+#      for file in uploaded_files:         # file= <_io.BufferedReader name='Data//Resume.pdf'>
        # print(Path(file.name))
-        file_name = os.path.basename(file.name)    
-        print(Path(file_name).suffix)
+#        file_name = os.path.basename(file.name)    
+#        print(Path(file_name).suffix)
        # print(file.read(100))
                                               
-test_file_existence()
+#test_file_existence()
+
+       # checking session and log deletion 
+
+base_dir = Path("Data/comparator_archive")
+def remove_pdf_files(base_dir,keep_latest:int=3):
+        """Remove the PDF files from the session directory."""
+        try:
+            sessions = sorted([f for f in base_dir.iterdir() if f.is_dir()], reverse=True)
+            print(sessions)
+            if len(sessions) > keep_latest:
+                del_session = sessions[0]
+                shutil.rmtree(del_session, ignore_errors=True)
+                log.info(f"Old session removed successfully name: {sessions[-1]}")
+           # for pdf_file in self.session_path.glob("*.pdf"):
+           
+                    #pdf_file.unlink()
+          #  self.session_path.rmdir()  # Remove the session directory if empty
+            log.info(f"Old PDF file and session removed successfully name: {del_session}")
+                
+        except Exception as e:
+            log.error(f"Error removing PDF files: {e}")
+            raise CustomException(f"Error removing PDF files: {e}", sys)
+        
+
+
+remove_pdf_files(base_dir,keep_latest=3)
+
+
+
 

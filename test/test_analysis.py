@@ -1,11 +1,11 @@
-import os 
-from src.doc_analyzer.data_analysis import DataAnalysis
-from src.doc_analyzer.data_ingestion import DataIngestion
+import os
+from pydoc import text 
+from src.doc_analyzer.analyzer import DataAnalysis
+from src.doc_ingestion.data_ingestion import AnalyzeIngestor 
 from exception.custom_exception import CustomException
-from logger.custom_logger import CustomLogger
 from pathlib import Path
 
-pdf_path='c:\\Genai_projects\\Document_portal\\Data\\sample.pdf'
+pdf_path = Path('c:\\Genai_projects\\Document_portal\\Data\\Deepak_Baghel_Resume.pdf')
 
 class DummnyFile:
     def __init__(self,file_path):
@@ -18,10 +18,10 @@ def main():
     try:
         dummy_pdf = DummnyFile(pdf_path)
         print(f"Dummy PDF created with name: {dummy_pdf.name}")
-        file_handler = DataIngestion(session_id="test_session")
-        save_pdf_path = file_handler.save_pdf(dummy_pdf)
-        print(f"PDF saved at: {save_pdf_path}") 
-        text_content = file_handler.read_pdf(save_pdf_path)
+        file_handler = AnalyzeIngestor(session_id="test_session")
+        save_file = file_handler.save_pdf(dummy_pdf)
+        
+        text_content = file_handler.read_pdf()
         print(f"Content read from PDF: {text_content[:100]}...")  # Print first 100 characters for brevity
         
         data_analysis = DataAnalysis()
@@ -34,5 +34,7 @@ def main():
         print(f"An error occurred: {e}")
 
 
+
 if __name__ == "__main__":
     main()
+

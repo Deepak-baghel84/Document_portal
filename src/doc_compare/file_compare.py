@@ -21,22 +21,29 @@ class DocumentCompare:
               parser=self.parser,
               llm=self.llm
           )
-          self.parser = JsonOutputParser(pydantic_object=PromptType)
-          self.prompt = PROMPT_REGISTRY.get(PromptType.DOCUMENT_COMPARISON.value)
+          #self.parser = JsonOutputParser(pydantic_object=PromptType)
+
+          self.prompt = PROMPT_REGISTRY[PromptType.DOCUMENT_COMPARISON.value]
+
           self.chain = self.prompt | self.llm | self.parser
           log.info("DocumentCompare initialized successfully.")
         except Exception as e:
             log.error(f"Error initializing DocumentCompare: {e}")
             raise CustomException("Error in initialization of DocumentCompare file", sys)
            
-    def Document_compare(self,combined_text:str)->pd.Dataframe:
+    def Document_compare(self,combined_text:str)->pd.DataFrame:
         try:
+            log.info("Starting document comparison process.")
+            if not combined_text:
+                log.error("Combined text for comparison is empty.")
+                raise ValueError("Combined text for comparison is empty.")
+                
             inputs = {"combined_docs":combined_text ,
                       "format_instruction":self.parser.get_format_instructions()}
         
             response = self.chain.invoke(inputs)
-            log(f"Document comparision have completed successfully.")
-            self._format_response(response)
+            log.info(f"Document comparision have completed successfully.")
+            return self._format_response(response)
         except Exception as e:
             log(f"Document comparision have an issue: {e}")
             raise CustomException("Document_compare have an issue ",sys)

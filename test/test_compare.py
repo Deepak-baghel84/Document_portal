@@ -1,12 +1,12 @@
-import os 
-from src.doc_analyzer.data_analysis import DataAnalysis
-from src.doc_compare.ingestion import Ingestor 
+import os
+from pydoc import text 
+from src.doc_compare.file_compare import DocumentCompare
+from src.doc_compare.file_compare import DocumentCompare
+from src.doc_ingestion.data_ingestion import CompareIngestor 
 from exception.custom_exception import CustomException
-from logger.custom_logger import CustomLogger
 from pathlib import Path
 
-
-act_path = Path('c:\\Genai_projects\\Document_portal\\Data\\sample.pdf')
+act_path = Path('c:\\Genai_projects\\Document_portal\\Data\\Deepak_Baghel_Resume.pdf')
 ref_path = Path('c:\\Genai_projects\\Document_portal\\Data\\Resume.pdf')
 
 
@@ -25,11 +25,15 @@ if __name__ == "__main__":
         act_file = DummyFile(act_path)
         ref_file = DummyFile(ref_path)
         print(f"Dummy PDF created with name: {act_file.name}")
-        file_handler = Ingestor(base_dir ="data//archive_compare" )
+        file_handler = CompareIngestor()
         save_pdf_path = file_handler.save_pdf_files(ref_file,act_file)
         print(f"PDFs saved at: {save_pdf_path}") 
         text_content = file_handler.combine_pdf_text()
         print(f"Content read from PDFS: {text_content[:100]}...")  # Print first 100 characters for brevity
+
+        compare_handler = DocumentCompare()
+        df = compare_handler.Document_compare(text_content)
+        print(f"Comparison DataFrame: {df.head()}")  # Print first few rows of the DataFrame
         
     except CustomException as e:
         print(f"An error occurred: {e}")

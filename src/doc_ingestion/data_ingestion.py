@@ -130,7 +130,7 @@ class AnalyzeIngestor():
             
             self.save_path = os.path.join(self.new_dir_path,file_name)
             with open(self.save_path, 'wb') as file:
-                file.write(uploaded_files.read())
+                file.write(uploaded_files.getbuffer())
 
             log.info(f"PDF saved successfully at: {self.save_path}")
 
@@ -202,6 +202,8 @@ class CompareIngestor():
             with open(act_save_path, 'wb') as file:
                 file.write(self.act_file.get_buffer())
             log.info(f"PDF files saved successfully at: {self.session_path}")
+
+            self._remove_pdf_files(keep_latest=3)
             #return ref_save_path, act_save_path
 
         except FileNotFoundError as e:
@@ -243,20 +245,19 @@ class CompareIngestor():
         :return: Combined text content.
         """
         try:
-            documents = [
-
-            ]
+            documents = []
             for pdf_file in sorted(self.session_path.iterdir()):
                 if pdf_file.suffix.lower() == '.pdf':
                     content = self.read_pdf(pdf_file)
                 documents.append(content)
-            combined_text = "\n".join(documents)
+            combined_text = "".join(documents)
             if not combined_text:
                 raise ValueError("No text found in the PDF files.")
             log.info("PDF text combined successfully.")
             return combined_text
         except Exception as e:
             log.error(f"Error combining PDF text: {e}")
+
             raise CustomException(e, sys)
         
 
@@ -264,13 +265,16 @@ class CompareIngestor():
     def _remove_pdf_files(self,keep_latest:int=3):
         """Remove the PDF files from the session directory."""
         try:
-            sessions = sorted([f for f in self.session_path.iterdir() if f.is_dir()], reverse=True)
-            for folder in sessions[keep_latest:]:
-                shutil.rmtree(folder, ignore_errors=True)
-
+            sessions = sorted([f for f in self.base_dir.iterdir() if f.is_dir()], reverse=True)
+            print(sessions)
+            if len(sessions) > keep_latest:
+                shutil.rmtree(sessions[-1], ignore_errors=True)
+                log.info(f"Old session removed successfully name: {sessions[-1]}")
+           # for pdf_file in self.session_path.glob("*.pdf"):
+           
                     #pdf_file.unlink()
           #  self.session_path.rmdir()  # Remove the session directory if empty
-            log.info(f"Old PDF files and folder removed successfully from: {self.session_path}")
+            log.info(f"Old PDF file and session removed successfully name: {self.session_path}")
                 
         except Exception as e:
             log.error(f"Error removing PDF files: {e}")
