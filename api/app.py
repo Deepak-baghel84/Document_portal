@@ -1,3 +1,4 @@
+from regex import A
 from src.doc_ingestion.data_ingestion import (
     AnalyzeIngestor,
     CompareIngestor,
@@ -45,15 +46,34 @@ def health_check()-> Dict[str,str]:
     return {"status": "ok", "message": "Service is healthy","device": "document-portal"}
 
 @app.post("/analyze")
-async def analyze_document():
-    pass
+async def analyze_document(file:UploadFile=File(...)):
+    file_dir = Path(file)
+    file_handler = AnalyzeIngestor(session_id="test_session")
+    save_file = file_handler.save_pdf(uploaded_files=file_dir)
+        
+    text_content = file_handler.read_pdf()
+        
+    data_analysis = DataAnalysis()
+    analysis_result = data_analysis.analyze_document(text_content)
+    
+    for key, value in analysis_result.items():
+        return(f"{key}: {value}")
 
 @app.post("/compare")
-def compare_documents():
-    pass
+def compare_documents(act_path:UploadFile=File(...),ref_path:UploadFile=File(...)):
+    act_file = Path(act_path)
+    ref_file = Path(ref_path)
+   
+    file_handler = CompareIngestor()
+    save_pdf_path = file_handler.save_pdf_files(ref_file,act_file)
+    text_content = file_handler.combine_pdf_text()
+
+    compare_handler = DocumentCompare()
+    df = compare_handler.Document_compare(text_content)
+    return(f"Comparison DataFrame: {df.head()}")  # Print first few rows of the DataFrame
 
 @app.post("/chat/ingest")
-def chat_ingest():
+def chat_ingest(file:UploadFile=File(...)):
     pass
 
 @app.post("/chat/query")

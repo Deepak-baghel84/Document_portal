@@ -1,4 +1,3 @@
-from numpy import save
 from logger import GLOBAL_LOGGER as log
 from exception.custom_exception import CustomException 
 from langchain_community.document_loaders import PyPDFLoader,TextLoader, Docx2txtLoader
@@ -82,6 +81,8 @@ class DocumentIngestor:
                 raise CustomException("No valid documents were loaded.", sys)
             
             log.info(f"Files saved successfully at {self.temp_path} and loaded into documents list")
+
+            _remove_pdf_files(base_dir=self.file_path)
             return documents
         except Exception as e:
             log.error(f"Error during file ingestion: {e}")
@@ -130,10 +131,10 @@ class AnalyzeIngestor():
             
             self.save_path = os.path.join(self.new_dir_path,file_name)
             with open(self.save_path, 'wb') as file:
-                file.write(uploaded_files.getbuffer())
+                file.write(open(uploaded_files, "rb").read())
 
             log.info(f"PDF saved successfully at: {self.save_path}")
-
+            _remove_pdf_files(base_dir=self.dir_path)
         except FileNotFoundError as e:
             log.error(f"File not found: {e}")
             raise CustomException(f"File not found: {e}", sys)
@@ -198,12 +199,12 @@ class CompareIngestor():
             ref_save_path = self.session_path / Path(self.ref_file.name)
             act_save_path = self.session_path / Path(self.act_file.name)
             with open(ref_save_path, 'wb') as file:
-                file.write(self.ref_file.get_buffer())
+                file.write(open(ref_file, "rb").read())
             with open(act_save_path, 'wb') as file:
-                file.write(self.act_file.get_buffer())
+                file.write(open(act_file, "rb").read())
             log.info(f"PDF files saved successfully at: {self.session_path}")
 
-            self._remove_pdf_files(keep_latest=3)
+            _remove_pdf_files(base_dir=self.base_dir)
             #return ref_save_path, act_save_path
 
         except FileNotFoundError as e:
@@ -262,20 +263,27 @@ class CompareIngestor():
         
 
 
-    def _remove_pdf_files(self,keep_latest:int=3):
+def _remove_pdf_files(base_dir="Data/archive",log_dir="logs",keep_latest:int=3):
         """Remove the PDF files from the session directory."""
         try:
-            sessions = sorted([f for f in self.base_dir.iterdir() if f.is_dir()], reverse=True)
+            _base_dir = Path(base_dir)
+            _log_dir = Path(log_dir)
+            sessions = sorted([f for f in _base_dir.iterdir() if f.is_dir()], reverse=True)
             print(sessions)
             if len(sessions) > keep_latest:
-                shutil.rmtree(sessions[-1], ignore_errors=True)
-                log.info(f"Old session removed successfully name: {sessions[-1]}")
-           # for pdf_file in self.session_path.glob("*.pdf"):
-           
-                    #pdf_file.unlink()
-          #  self.session_path.rmdir()  # Remove the session directory if empty
-            log.info(f"Old PDF file and session removed successfully name: {self.session_path}")
+                for session in sessions[keep_latest:]:
+                    if os.path.exists(log_file):
+                      os.remove(session)
+                log.info(f"Old session removed successfully ")
+              
+            
+            logs = sorted([f for f in _log_dir.iterdir() if f.is_file() and f.suffix == '.log'], reverse=True)
+            if len(logs) > keep_latest:
+                for log_file in logs[keep_latest:]:
+                    if os.path.exists(log_file):
+                      os.remove(log_file)
+                log.info(f"Old logs removed successfully ")
                 
         except Exception as e:
-            log.error(f"Error removing PDF files: {e}")
-            raise CustomException(f"Error removing PDF files: {e}", sys)
+            log.error(f"Error removing files or logs: {e}")
+            raise CustomException(f"Error removing files or logs: {e}", sys)

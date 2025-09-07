@@ -82,28 +82,30 @@ from dotenv import load_dotenv
        # checking session and log deletion 
 
 base_dir = Path("Data/comparator_archive")
-def remove_pdf_files(base_dir,keep_latest:int=3):
+log_dir = Path("logs")
+def remove_pdf_files(keep_latest:int=3):
         """Remove the PDF files from the session directory."""
         try:
             sessions = sorted([f for f in base_dir.iterdir() if f.is_dir()], reverse=True)
             print(sessions)
             if len(sessions) > keep_latest:
-                del_session = sessions[0]
-                shutil.rmtree(del_session, ignore_errors=True)
-                log.info(f"Old session removed successfully name: {sessions[-1]}")
-           # for pdf_file in self.session_path.glob("*.pdf"):
-           
-                    #pdf_file.unlink()
-          #  self.session_path.rmdir()  # Remove the session directory if empty
-            log.info(f"Old PDF file and session removed successfully name: {del_session}")
+                for session in sessions[keep_latest:]:
+                    if os.path.exists(log_file):
+                      os.remove(session)
+                log.info(f"Old session removed successfully ")
+              
+            
+            logs = sorted([f for f in log_dir.iterdir() if f.is_file() and f.suffix == '.log'], reverse=True)
+            if len(logs) > keep_latest:
+                for log_file in logs[keep_latest:]:
+                    if os.path.exists(log_file):
+                      os.remove(log_file)
+                log.info(f"Old logs removed successfully ")
                 
         except Exception as e:
             log.error(f"Error removing PDF files: {e}")
             raise CustomException(f"Error removing PDF files: {e}", sys)
         
-
-
-remove_pdf_files(base_dir,keep_latest=3)
 
 
 

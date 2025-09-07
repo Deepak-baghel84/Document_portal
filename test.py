@@ -1,38 +1,35 @@
 import os
-from src.doc_compare.file_compare import DocumentCompare
-from src.doc_compare.file_compare import DocumentCompare
-from src.doc_ingestion.data_ingestion import CompareIngestor 
+from pydoc import text 
+from src.doc_analyzer.analyzer import DataAnalysis
+from src.doc_ingestion.data_ingestion import AnalyzeIngestor 
 from exception.custom_exception import CustomException
 from pathlib import Path
 
-act_path = Path('c:\\Genai_projects\\Document_portal\\Data\\Deepak_Baghel_Resume.pdf')
-ref_path = Path('c:\\Genai_projects\\Document_portal\\Data\\Resume.pdf')
+pdf_path = Path('c:\\Genai_projects\\Document_portal\\Data\\Deepak_Baghel_Resume.pdf')
 
 
-
-class DummyFile():
-    """A dummy file class to simulate file operations for testing purposes."""
-    def __init__(self,file_path: Path):
-        self.name = Path(file_path).name
-        self._read_buffer = file_path.read_bytes()
-    def get_buffer(self):
-        return self._read_buffer  
-        
-if __name__ == "__main__":
-        
+def main():
+#    """Main function to run the data analysis on a sample PDF."""
     try:
-        act_file = DummyFile(act_path)
-        ref_file = DummyFile(ref_path)
-        print(f"Dummy PDF created with name: {act_file.name}")
-        file_handler = CompareIngestor()
-        save_pdf_path = file_handler.save_pdf_files(ref_file,act_file)
-        print(f"PDFs saved at: {save_pdf_path}") 
-        text_content = file_handler.combine_pdf_text()
-        print(f"Content read from PDFS: {text_content[:100]}...")  # Print first 100 characters for brevity
-
-        compare_handler = DocumentCompare()
-        df = compare_handler.Document_compare(text_content)
-        print(f"Comparison DataFrame: {df.head()}")  # Print first few rows of the DataFrame
+        #dummy_pdf = DummnyFile(pdf_path)
+        print(f"Dummy PDF created ")
+        file_handler = AnalyzeIngestor(session_id="test_session")
+        save_file = file_handler.save_pdf(uploaded_files=pdf_path)
+        
+        text_content = file_handler.read_pdf()
+        print(f"Content read from PDF: {text_content[:100]}...")  # Print first 100 characters for brevity
+        
+        data_analysis = DataAnalysis()
+        analysis_result = data_analysis.analyze_document(text_content)
+        print("Analysis Response:", analysis_result)
+        for key, value in analysis_result.items():
+            print(f"{key}: {value}")
         
     except CustomException as e:
         print(f"An error occurred: {e}")
+
+
+
+if __name__ == "__main__":
+    main()
+
