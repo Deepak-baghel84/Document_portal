@@ -41,6 +41,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+@app.get("/", response_class=HTMLResponse)
+async def serve_ui(request: Request):
+    log.info("Serving UI homepage.")
+    resp = templates.TemplateResponse("index.html", {"request": request})
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
+
 
 @app.get("/health")
 def health_check()-> Dict[str,str]:
