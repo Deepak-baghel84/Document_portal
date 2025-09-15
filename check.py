@@ -1,9 +1,9 @@
 from email.mime import base
-from src.doc_chat.doc_retriver import DocumentRetriever
-from src.doc_ingestion.data_ingestion import DocumentIngestor
+from src.document_chat.doc_retriver import DocumentRetriever
+from src.document_ingestion.data_ingestion import DocumentIngestor
 
 import shutil
-from utills.config_util import load_config
+from utils.config_util import load_config
 import os
 from logger.custom_logger import CustomLogger
 import datetime
@@ -14,7 +14,7 @@ from langchain_core.output_parsers import StrOutputParser
 from typing import Optional,List
 from logger import GLOBAL_LOGGER as log
 from exception.custom_exception import CustomException
-from utills.model_utils import ModelLoader
+from utils.model_utils import ModelLoader
 from prompt.prompt_analyzer import PROMPT_REGISTRY
 from model.base_model import PromptType,SummaryResponse
 from pathlib import Path

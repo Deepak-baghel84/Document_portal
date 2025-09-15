@@ -1,8 +1,8 @@
 import os
 from pydoc import text 
-from src.doc_compare.file_compare import DocumentCompare
-from src.doc_compare.file_compare import DocumentCompare
-from src.doc_ingestion.data_ingestion import CompareIngestor 
+from src.document_compare.document_comparator import DocumentCompare
+from src.document_compare.document_comparator import DocumentCompare
+from src.document_ingestion.data_ingestion import CompareIngestor 
 from exception.custom_exception import CustomException
 from pathlib import Path
 

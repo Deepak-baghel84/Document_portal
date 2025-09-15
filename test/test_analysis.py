@@ -1,7 +1,7 @@
 import os
 from pydoc import text 
-from src.doc_analyzer.analyzer import DataAnalysis
-from src.doc_ingestion.data_ingestion import AnalyzeIngestor 
+from src.document_analyzer.data_analysis import DataAnalysis
+from src.document_ingestion.data_ingestion import AnalyzeIngestor 
 from exception.custom_exception import CustomException
 from pathlib import Path
 

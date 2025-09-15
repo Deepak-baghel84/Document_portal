@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 from logger.custom_logger import CustomLogger
 from exception.custom_exception import CustomException
-from utills.config_util import load_config
+from utils.config_util import load_config
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_google_genai import GoogleGenerativeAIEmbeddings

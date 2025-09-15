@@ -5,7 +5,7 @@ from langchain_core.output_parsers import StrOutputParser
 from typing import Optional,List
 from logger import GLOBAL_LOGGER as log
 from exception.custom_exception import CustomException
-from utills.model_utils import ModelLoader
+from utils.model_utils import ModelLoader
 from prompt.prompt_analyzer import PROMPT_REGISTRY
 from model.base_model import PromptType,SummaryResponse
 from pathlib import Path
@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-class DocumentRetriever:
+class ConversationalRAG:
     def __init__(self, retriver, session_id: str = None):
         """
         Initializes the DocumentRetriever with the path for the FAISS index.

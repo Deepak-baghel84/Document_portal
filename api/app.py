@@ -1,20 +1,16 @@
-from regex import A
-from src import doc_compare
-from src.doc_ingestion.data_ingestion import (
-    AnalyzeIngestor,
-    CompareIngestor,
-    DocumentIngestor,
+from src.document_ingestion.data_ingestion import (
+    DocHandler,
+    DocumentComparator,
+    ChatIngestor,
 )
-from src.doc_analyzer.analyzer import DataAnalysis
-from src.doc_compare.file_compare import DocumentCompare
-from src.doc_chat.doc_retriver import DocumentRetriever
-#from utills.document_ops import FastAPIFileAdapter,read_pdf_via_handler
+from src.document_analyzer.data_analysis import DocumentAnalyzer
+from src.document_compare.document_comparator import DocumentComparatorLLM
+from src.document_chat.retrieval import ConversationalRAG
 from logger import GLOBAL_LOGGER as log
-from exception.custom_exception import CustomException
-from pathlib import Path
-import sys
-import os 
 
+from pathlib import Path
+import os 
+from utils.document_ops import FastAPIFileAdapter,read_pdf_via_handler
 from typing import List, Optional, Any, Dict
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request
 from fastapi.responses import JSONResponse, HTMLResponse
@@ -60,12 +56,12 @@ async def analyze_document(file:UploadFile=File(...))-> JSONResponse:
         if not file:
             raise HTTPException(status_code=400, detail="No file provided") 
         file_dir = Path(file)
-        file_handler = AnalyzeIngestor(session_id="test_session")
+        file_handler = DocHandler(session_id="test_session")
         save_file = file_handler.save_pdf(uploaded_files=file_dir)
         
         text_content = file_handler.read_pdf()
         
-        data_analysis = DataAnalysis()
+        data_analysis =  DocumentAnalyzer()
         analysis_result = data_analysis.analyze_document(text_content)
     
         return JSONResponse(content=analysis_result)
@@ -81,11 +77,11 @@ async def compare_documents(act_path:UploadFile=File(...),ref_path:UploadFile=Fi
         act_file = Path(act_path)
         ref_file = Path(ref_path)
    
-        doc_compare = CompareIngestor()
+        doc_compare = DocumentComparator()
         _ = doc_compare.save_pdf_files(ref_file,act_file)
         text_content = doc_compare.combine_pdf_text()
 
-        compare_handler = DocumentCompare()
+        compare_handler = DocumentComparatorLLM()
         df = compare_handler.Document_compare(text_content)
 
         return {"rows": df.to_dict(orient="records"), "session_id": doc_compare.session_id}
@@ -102,7 +98,7 @@ async def chat_ingest(files:List[UploadFile]=File(...),session_id: Optional[str]
         if wrapped is None or len(wrapped) == 0:
             raise HTTPException(status_code=400, detail="No files provided")
         
-        file_handler = DocumentIngestor(temp_base=UPLOAD_BASE,
+        file_handler = ChatIngestor(temp_base=UPLOAD_BASE,
             faiss_base=FAISS_BASE,
             use_session_dirs=use_session_dirs,
             session_id=session_id or None,)
@@ -134,7 +130,7 @@ async def chat_query(
             raise HTTPException(status_code=404, detail=f"FAISS index not found at: {index_dir}")
 
         # Initialize LCEL-style RAG pipeline
-        rag = DocumentRetriever(session_id=session_id) #type: ignore
+        rag = ConversationalRAG(session_id=session_id) #type: ignore
         #rag.load_retriever_from_faiss(index_dir)
 
         # Optional: For now we pass empty chat history

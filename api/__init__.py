@@ -1,4 +1,4 @@
-from src.doc_ingestion.data_ingestion import (
+from src.document_ingestion.data_ingestion import (
     DocHandler,
     DocumentComparator,
     ChatIngestor,

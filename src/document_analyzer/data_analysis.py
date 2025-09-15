@@ -1,14 +1,14 @@
 import os
 from exception.custom_exception import CustomException
 from logger import GLOBAL_LOGGER as log
-from utills.model_utils import ModelLoader
+from utils.model_utils import ModelLoader
 from prompt.prompt_analyzer import PROMPT_REGISTRY
 from langchain_core.output_parsers import JsonOutputParser
 from langchain.output_parsers import OutputFixingParser
 from model.base_model import Metadata
 import sys
 
-class DataAnalysis:
+class  DocumentAnalyzer:
     """Class to perform data analysis on the ingested PDF files.
     It initializes the model loader and provides methods for data analysis."""
     

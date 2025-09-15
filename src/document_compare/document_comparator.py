@@ -3,14 +3,14 @@ from exception.custom_exception import CustomException
 from langchain_core.output_parsers import JsonOutputParser
 from langchain.output_parsers import OutputFixingParser
 from prompt.prompt_analyzer import PROMPT_REGISTRY
-from utills.model_utils import ModelLoader
+from utils.model_utils import ModelLoader
 from model.base_model import SummaryResponse,PromptType
 import sys
 import pandas as pd
 from dotenv import load_dotenv
 
 
-class DocumentCompare:
+class DocumentComparatorLLM:
     def __init__(self):
         try:
           load_dotenv()

@@ -1,6 +1,6 @@
 import os 
-from src.doc_ingestion.data_ingestion import DocumentIngestor
-from src.doc_chat.doc_retriver import DocumentRetriever
+from src.document_ingestion.data_ingestion import DocumentIngestor
+from src.document_chat.doc_retriver import DocumentRetriever
 from exception.custom_exception import CustomException
 from pathlib import Path
 import sys

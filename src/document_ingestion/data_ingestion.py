@@ -5,19 +5,21 @@ from pathlib import Path
 import sys 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from datetime import datetime
-from utills.model_utils import ModelLoader
+from utils.model_utils import ModelLoader
 from langchain_community.vectorstores import FAISS
-from datetime import datetime,timezone
+from datetime import datetime
 import uuid
 import os
-import shutil
+
 from pypdf import PdfReader
 
 
 
 accepted_file_format = {".pdf",".txt",".md",".docs"}
 
-class DocumentIngestor:
+class ChatIngestor():
+    """Class to handle document ingestion and FAISS index creation for chat applications.
+    """
     
     def __init__(self,file_path:str="Data//multidoc_archive",session_id:str=None,faiss_index_path:str="Data//faiss_index"):
         """
@@ -105,7 +107,7 @@ class DocumentIngestor:
         
 
 
-class AnalyzeIngestor():
+class DocHandler():
     def __init__(self,dir_path:str="Data//analyzer_archive",session_id:str=None):
         """Initialize the DataIngestion class with file path and session ID.
         :param file_path: Path to the PDF file to be processed.
@@ -168,7 +170,7 @@ class AnalyzeIngestor():
             raise CustomException(f"Error during extraction of documents: {e}", sys)
 
 
-class CompareIngestor():
+class DocumentComparator():
     def __init__(self, dir_path: str = "Data//comparator_archive", session_id: str = None):
         """
         Initialize the DataIngestion class with file path and session ID.
