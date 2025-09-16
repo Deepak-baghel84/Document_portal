@@ -1,6 +1,7 @@
 from logger import GLOBAL_LOGGER as log
 from exception.custom_exception import CustomException 
 from langchain_community.document_loaders import PyPDFLoader,TextLoader, Docx2txtLoader
+from utils.document_ops import load_document
 from pathlib import Path 
 import sys 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -14,8 +15,6 @@ import os
 from pypdf import PdfReader
 
 
-
-accepted_file_format = {".pdf",".txt",".md",".docs"}
 
 class ChatIngestor():
     """Class to handle document ingestion and FAISS index creation for chat applications.
@@ -55,28 +54,17 @@ class ChatIngestor():
         
     def ingest_file(self,uploaded_files,session_id=None):
         try:
-            documents = []
+            if not uploaded_files or len(uploaded_files) == 0:
+                log.error("No files provided for ingestion.")
+                raise CustomException("No files provided for ingestion.", sys)
             for file in uploaded_files:
+                log.info(f"Loading document from path: {file}")
                 file_name = os.path.basename(file.name)
-                if Path(file_name).suffix.lower() not in {".pdf", ".txt", ".docs"}:
-                    log.error(f"Unsupported file format: {Path(file_name).suffix}")
-                    continue
-                new_file_path = self.temp_path / file_name    # problem in file name
+                new_file_path = self.temp_path / file_name    
                 with open(new_file_path, 'wb') as f:
                     f.write(file.read())
 
-                if Path(file_name).suffix.lower() == ".pdf":
-                    loader = PyPDFLoader(str(new_file_path))
-                elif Path(file_name).suffix.lower() == ".txt":
-                    loader = TextLoader(str(new_file_path), encoding="utf-8")
-                elif Path(file_name).suffix.lower() == ".docs":
-                    loader = Docx2txtLoader(str(new_file_path))
-                else:
-                    log.warning(f"Unsupported file format: {file.suffix}")
-                    continue
-                docs = loader.load()
-                documents.extend(docs)
-                #log.info(f"Loaded {len(docs)} pages from {file_name}")
+            documents = load_document(uploaded_files)
 
             if documents == []:
                 log.error("No valid documents were loaded.")
@@ -127,10 +115,6 @@ class DocHandler():
     def save_pdf(self,uploaded_files):
         try:
             file_name = os.path.basename(uploaded_files.name)
-            if Path(file_name).suffix.lower() not in accepted_file_format:
-                log.error(f"Unsupported file format: {Path(file_name).suffix}")
-                raise CustomException(f"Unsupported file format: {Path(file_name).suffix}", sys)
-            
             self.save_path = os.path.join(self.new_dir_path,file_name)
             with open(self.save_path, 'wb') as file:
                 file.write(open(uploaded_files, "rb").read())
@@ -142,22 +126,9 @@ class DocHandler():
             raise CustomException(f"File not found: {e}", sys)
 
     def read_pdf(self):
-        documents = []
+        
         try:
-            with open (self.save_path, 'rb') as file:
-                if Path(self.save_path).suffix.lower() == ".pdf":
-                    loader = PyPDFLoader(self.save_path)
-                elif Path(self.save_path).suffix.lower() == ".txt":
-                    loader = TextLoader(self.save_path, encoding="utf-8")
-                elif Path(self.save_path).suffix.lower() == ".docs":
-                    loader = Docx2txtLoader(self.save_path)
-                else:
-                    log.warning(f"Unsupported file format: {Path(self.save_path).suffix}")
-                    raise CustomException(f"Unsupported file format: {Path(self.save_path).suffix}", sys)
-                
-                docs = loader.load()
-                documents.extend(docs)
-                #log.info(f"Loaded {len(docs)} pages from {file_name}")
+            documents = load_document([Path(self.save_path)])
 
             if documents == []:
                 log.error("No valid documents were loaded.")
@@ -198,11 +169,11 @@ class DocumentComparator():
             self.act_file = act_file
             #if not self.ref_file.name.lower().endswith('.pdf') or not self.act_file.name.lower().endswith('.pdf'):
              #   raise ValueError("One or both files are not PDFs.")
-            ref_save_path = self.session_path / Path(self.ref_file.name)
-            act_save_path = self.session_path / Path(self.act_file.name)
-            with open(ref_save_path, 'wb') as file:
+            self.ref_save_path = self.session_path / Path(self.ref_file.name)
+            self.act_save_path = self.session_path / Path(self.act_file.name)
+            with open(self.ref_save_path, 'wb') as file:
                 file.write(open(ref_file, "rb").read())
-            with open(act_save_path, 'wb') as file:
+            with open(self.act_save_path, 'wb') as file:
                 file.write(open(act_file, "rb").read())
             log.info(f"PDF files saved successfully at: {self.session_path}")
 
@@ -248,16 +219,9 @@ class DocumentComparator():
         :return: Combined text content.
         """
         try:
-            documents = []
-            for pdf_file in sorted(self.session_path.iterdir()):
-                if pdf_file.suffix.lower() == '.pdf':
-                    content = self.read_pdf(pdf_file)
-                documents.append(content)
-            combined_text = "".join(documents)
-            if not combined_text:
-                raise ValueError("No text found in the PDF files.")
+            documents = load_document([self.ref_save_path, self.act_save_path])
             log.info("PDF text combined successfully.")
-            return combined_text
+            return documents
         except Exception as e:
             log.error(f"Error combining PDF text: {e}")
 
