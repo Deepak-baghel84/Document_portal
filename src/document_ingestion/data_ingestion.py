@@ -11,7 +11,7 @@ from langchain_community.vectorstores import FAISS
 from datetime import datetime
 import uuid
 import os
-
+from typing import List, Optional
 from pypdf import PdfReader
 
 
@@ -96,7 +96,7 @@ class ChatIngestor():
 
 
 class DocHandler():
-    def __init__(self,dir_path:str="Data//analyzer_archive",session_id:str=None):
+    def __init__(self,dir_path:Optional[str]="Data//analyzer_archive",session_id:Optional[str]=None):
         """Initialize the DataIngestion class with file path and session ID.
         :param file_path: Path to the PDF file to be processed.
         :param session_id: Unique identifier for the session.  
@@ -125,10 +125,11 @@ class DocHandler():
             log.error(f"File not found: {e}")
             raise CustomException(f"File not found: {e}", sys)
 
-    def read_pdf(self):
+    def read_pdf(self,file_path:Path):
         
         try:
-            documents = load_document([Path(self.save_path)])
+            file_path = file_path or self.save_path
+            documents = load_document([Path(file_path)])
 
             if documents == []:
                 log.error("No valid documents were loaded.")

@@ -30,38 +30,27 @@ def load_document(file_paths:Iterable[Path])-> List[Document]:
                 log.error(f"Unsupported file format: {file_path.suffix}")
                 raise CustomException(f"Unsupported file format: {file_path.suffix}", None)
         
-            docs.extend(loader.load())
+            doc = loader.load()
+            docs.extend(f"Document: {file_name}\n{d.page_content}" for d in doc)
         log.info(f"Loaded {len(docs)} pages successfully")
         return docs
     except Exception as e:
         log.error(f"Error loading document : {e}")
         raise CustomException(f"Error loading document : {e}", None)
     
+def concat_for_analysis(docs: List[Document]) -> str:
+    parts = []
+    for d in docs:
+        src = d.metadata.get("source") or d.metadata.get("file_path") or "unknown"
+        parts.append(f"\n--- SOURCE: {src} ---\n{d.page_content}")
+    return "\n".join(parts)
 
+def concat_for_comparison(ref_docs: List[Document], act_docs: List[Document]) -> str:
+    left = concat_for_analysis(ref_docs)
+    right = concat_for_analysis(act_docs)
+    return f"<<REFERENCE_DOCUMENTS>>\n{left}\n\n<<ACTUAL_DOCUMENTS>>\n{right}"
 
-def save_pdf_via_handler(file:UploadFile,save_dir:Path)-> Path:
-    try:
-        if not file:
-            raise CustomException("No file provided", None)
-        if not save_dir.exists():
-            save_dir.mkdir(parents=True, exist_ok=True)
-        file_name = os.path.basename(file.filename)
-        if Path(file_name).suffix.lower() != ".pdf":
-            log.error(f"Unsupported file format: {Path(file_name).suffix}")
-            raise CustomException(f"Unsupported file format: {Path(file_name).suffix}", None)
-        save_path = save_dir / file_name
-        with open(save_path, 'wb') as f:
-            f.write(file.file.read())
-        log.info(f"File saved successfully at: {save_path}")
-        return save_path
-    except Exception as e:
-        log.error(f"Error saving file: {e}")
-        raise CustomException(f"Error saving file: {e}", None)
-    
-
-
-
-
+#---------- Helper Classes and Functions ----------
 class FastAPIFileAdapter:
     """Adapt FastAPI UploadFile -> .name + .getbuffer() API"""
     def __init__(self, uf: UploadFile):
