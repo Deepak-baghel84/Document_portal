@@ -1,17 +1,17 @@
 from logger import GLOBAL_LOGGER as log
 from exception.custom_exception import CustomException 
 from langchain_community.document_loaders import PyPDFLoader,TextLoader, Docx2txtLoader
-from utils.document_ops import load_document
 from pathlib import Path 
 import sys 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from datetime import datetime
 from utils.model_utils import ModelLoader
+from utils.document_ops import load_documents
 from langchain_community.vectorstores import FAISS
 from datetime import datetime
 import uuid
 import os
-from typing import List, Optional
+from typing import List, Optional, Iterable
 from pypdf import PdfReader
 
 
@@ -20,7 +20,7 @@ class ChatIngestor():
     """Class to handle document ingestion and FAISS index creation for chat applications.
     """
     
-    def __init__(self,file_path:str="Data//multidoc_archive",session_id:str=None,faiss_index_path:str="Data//faiss_index"):
+    def __init__(self,temp_base: str = "data",faiss_base: str = "faiss_index",use_session_dirs: bool = True,session_id: Optional[str] = None,):
         """
         Initializes the DocumentIngestor with paths for file storage and FAISS index.
         :param file_path: Directory where documents will be stored.
@@ -29,22 +29,25 @@ class ChatIngestor():
         """
         
         try:
-            self.file_path = Path(file_path)
-            self.faiss_index_path = Path(faiss_index_path)
-            self.file_path.mkdir(parents=True,exist_ok =True)
-            self.faiss_index_path.mkdir(parents=True,exist_ok=True)
-
-            self.session_id_ = session_id or f"session_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
-            self.session_id = Path(self.session_id_)
-            self.temp_path = self.file_path / self.session_id
-            self.session_faiss_index = self.faiss_index_path / self.session_id
-            self.temp_path.mkdir(parents=True,exist_ok=True)
-            self.session_faiss_index.mkdir(parents=True,exist_ok=True)
-
-            self.model = ModelLoader()
-            self.embed = self.model.load_embedding()
+            self.model_loader = ModelLoader()
             
-            log.info("DocumentIngestor successfully initialized")
+            self.use_session = use_session_dirs
+            self.session_id = session_id or generate_session_id()
+            
+            self.temp_base = Path(temp_base); self.temp_base.mkdir(parents=True, exist_ok=True)
+            self.faiss_base = Path(faiss_base); self.faiss_base.mkdir(parents=True, exist_ok=True)
+            
+            self.temp_dir = self._resolve_dir(self.temp_base)
+            self.faiss_dir = self._resolve_dir(self.faiss_base)
+
+            log.info("ChatIngestor initialized",
+                      session_id=self.session_id,
+                      temp_dir=str(self.temp_dir),
+                      faiss_dir=str(self.faiss_dir),
+                      sessionized=self.use_session)
+        except Exception as e:
+            log.error("Failed to initialize ChatIngestor", error=str(e))
+            raise Exception("Initialization error in ChatIngestor", e) from e
             
           
 
@@ -64,7 +67,7 @@ class ChatIngestor():
                 with open(new_file_path, 'wb') as f:
                     f.write(file.read())
 
-            documents = load_document(uploaded_files)
+            documents = load_documents(uploaded_files)
 
             if documents == []:
                 log.error("No valid documents were loaded.")
@@ -78,8 +81,12 @@ class ChatIngestor():
             log.error(f"Error during file ingestion: {e}")
             raise CustomException(f"Error during file ingestion: {e}", sys)
         
-    def create_retrivel(self,documents):
+    def create_retrivel(self,documents: Iterable,*,chunk_size: int = 1000,chunk_overlap: int = 200,k: int = 5):
         try:
+            paths = save_uploaded_files(documents, self.temp_dir)
+            docs = load_documents(paths)
+            if not docs:
+                raise ValueError("No valid documents loaded")
             text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
             split_docs = text_splitter.split_documents(documents)
             log.info(f"Documents splited into {len(split_docs)} chunks")
@@ -115,12 +122,13 @@ class DocHandler():
     def save_pdf(self,uploaded_files):
         try:
             file_name = os.path.basename(uploaded_files.name)
-            self.save_path = os.path.join(self.new_dir_path,file_name)
-            with open(self.save_path, 'wb') as file:
+            save_path = os.path.join(self.new_dir_path,file_name)
+            with open(save_path, 'wb') as file:
                 file.write(open(uploaded_files, "rb").read())
 
-            log.info(f"PDF saved successfully at: {self.save_path}")
+            log.info(f"PDF saved successfully at: {save_path}")
             _remove_pdf_files(base_dir=self.dir_path)
+            return save_path
         except FileNotFoundError as e:
             log.error(f"File not found: {e}")
             raise CustomException(f"File not found: {e}", sys)
@@ -128,18 +136,21 @@ class DocHandler():
     def read_pdf(self,file_path:Path):
         
         try:
-            file_path = file_path or self.save_path
-            documents = load_document([Path(file_path)])
-
-            if documents == []:
-                log.error("No valid documents were loaded.")
-                raise CustomException("No valid documents were loaded.", sys)
-            
-            log.info(f"Files loaded into documents list successfully from {self.save_path}")
-            return documents
+            text_chunks = []
+            number = 1
+            with open(file_path, 'rb') as file:
+                reader = PdfReader(file)
+                for page in reader.pages:
+                    text = page.extract_text()
+                    if text.strip():
+                        text_chunks.append(f"file-Page ---{number}---: \n{text}")
+                    number += 1  # type: ignore
+            text = "\n".join(text_chunks)
+            log.info("PDF read successfully", pdf_path=file_path, session_id=self.session_id, pages=len(text_chunks))
+            return text
         except Exception as e:
-            log.error(f"Error during extracting file: {e}")
-            raise CustomException(f"Error during extraction of documents: {e}", sys)
+            log.error("Failed to read PDF", error=str(e), pdf_path=file_path, session_id=self.session_id)
+            raise Exception(f"Could not process PDF: {file_path}", e) from e
 
 
 class DocumentComparator():
@@ -170,16 +181,17 @@ class DocumentComparator():
             self.act_file = act_file
             #if not self.ref_file.name.lower().endswith('.pdf') or not self.act_file.name.lower().endswith('.pdf'):
              #   raise ValueError("One or both files are not PDFs.")
-            self.ref_save_path = self.session_path / Path(self.ref_file.name)
-            self.act_save_path = self.session_path / Path(self.act_file.name)
-            with open(self.ref_save_path, 'wb') as file:
+            ref_save_path = self.session_path / Path(self.ref_file.name)
+            act_save_path = self.session_path / Path(self.act_file.name)
+            with open(ref_save_path, 'wb') as file:
                 file.write(open(ref_file, "rb").read())
-            with open(self.act_save_path, 'wb') as file:
+            with open(act_save_path, 'wb') as file:
                 file.write(open(act_file, "rb").read())
             log.info(f"PDF files saved successfully at: {self.session_path}")
 
             _remove_pdf_files(base_dir=self.base_dir)
-            #return ref_save_path, act_save_path
+
+            return ref_save_path, act_save_path
 
         except FileNotFoundError as e:
             log.error(f"File not found: {e}")
@@ -220,15 +232,17 @@ class DocumentComparator():
         :return: Combined text content.
         """
         try:
-            documents = load_document([self.ref_save_path, self.act_save_path])
-            log.info("PDF text combined successfully.")
-            return documents
+            doc_parts = []
+            for file in sorted(self.session_path.iterdir()):
+                if file.is_file() and file.suffix.lower() == ".pdf":
+                    content = self.read_pdf(file)
+                    doc_parts.append(f"Document: {file.name}\n{content}")
+            combined_text = "\n\n".join(doc_parts)
+            log.info("Documents combined", count=len(doc_parts), session=self.session_id)
+            return combined_text
         except Exception as e:
-            log.error(f"Error combining PDF text: {e}")
-
-            raise CustomException(e, sys)
-        
-
+            log.error("Error combining documents", error=str(e), session=self.session_id)
+            raise Exception("Error combining documents", e) from e
 
 def _remove_pdf_files(base_dir="Data/archive",log_dir="logs",keep_latest:int=3):
         """Remove the PDF files from the session directory."""
@@ -250,7 +264,8 @@ def _remove_pdf_files(base_dir="Data/archive",log_dir="logs",keep_latest:int=3):
                     if os.path.exists(log_file):
                       os.remove(log_file)
                 log.info(f"Old logs removed successfully ")
-                
+
+            return
         except Exception as e:
             log.error(f"Error removing files or logs: {e}")
             raise CustomException(f"Error removing files or logs: {e}", sys)

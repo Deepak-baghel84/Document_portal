@@ -10,7 +10,7 @@ from exception.custom_exception import CustomException
 
 SUPPORTED_EXTENSIONS = {".pdf", ".docx", ".txt"}
 
-def load_document(file_paths:Iterable[Path])-> List[Document]:
+def load_documents(file_paths:Iterable[Path])-> List[Document]:
     docs: List[Document] = []
     try:
         for file_path in file_paths :
