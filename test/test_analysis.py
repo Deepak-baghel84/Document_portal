@@ -1,7 +1,6 @@
-import os
-from pydoc import text 
-from src.document_analyzer.data_analysis import DataAnalysis
-from src.document_ingestion.data_ingestion import AnalyzeIngestor 
+
+from src.document_analyzer.data_analysis import DocumentAnalyzer
+from src.document_ingestion.data_ingestion import DocHandler 
 from exception.custom_exception import CustomException
 from pathlib import Path
 
@@ -18,13 +17,13 @@ def main():
     try:
         dummy_pdf = DummnyFile(pdf_path)
         print(f"Dummy PDF created with name: {dummy_pdf.name}")
-        file_handler = AnalyzeIngestor(session_id="test_session")
-        save_file = file_handler.save_pdf(dummy_pdf)
+        file_handler = DocHandler(dir_path="Data//analyzer_archive",session_id="test_session")
+        save_file_path = file_handler.save_pdf(dummy_pdf)
         
-        text_content = file_handler.read_pdf()
+        text_content = file_handler.read_pdf(save_file_path)
         print(f"Content read from PDF: {text_content[:100]}...")  # Print first 100 characters for brevity
         
-        data_analysis = DataAnalysis()
+        data_analysis = DocumentAnalyzer()
         analysis_result = data_analysis.analyze_document(text_content)
         print("Analysis Response:", analysis_result)
         for key, value in analysis_result.items():
