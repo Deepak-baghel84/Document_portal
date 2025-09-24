@@ -55,11 +55,13 @@ async def analyze_document(file:UploadFile=File(...))-> JSONResponse:
         log.info(f"Received file for analysis: {file.filename}")
         if not file:
             raise HTTPException(status_code=400, detail="No file provided") 
-        file_dir = Path(file)
-        file_handler = DocHandler(session_id="test_session")
-        save_file = file_handler.save_pdf(uploaded_files=file_dir)
+        file_dir = file
+        log.info(f"Saving file to analyzer archive.")
+        file_handler = DocHandler(dir_path="Data//analyzer_archive",session_id="test_session")
         
-        text_content = file_handler.read_pdf()
+        save_file_path = file_handler.save_pdf(FastAPIFileAdapter(file_dir))
+        
+        text_content = file_handler.read_pdf(save_file_path)
         
         data_analysis =  DocumentAnalyzer()
         analysis_result = data_analysis.analyze_document(text_content)
@@ -71,11 +73,11 @@ async def analyze_document(file:UploadFile=File(...))-> JSONResponse:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {e}")
 
 @app.post("/compare")
-async def compare_documents(act_path:UploadFile=File(...),ref_path:UploadFile=File(...))-> Dict[str, Any]:
+async def compare_documents(reference: UploadFile = File(...), actual: UploadFile = File(...))-> Any:
     try:
-        log.info(f"Received files for comparison: {act_path.filename}, {ref_path.filename}")
-        act_file = Path(act_path)
-        ref_file = Path(ref_path)
+        log.info(f"Received files for comparison: {actual.filename}, {reference.filename}")
+        act_file = actual
+        ref_file = reference
    
         doc_compare = DocumentComparator()
         _ = doc_compare.save_pdf_files(ref_file,act_file)
