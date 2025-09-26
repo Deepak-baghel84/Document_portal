@@ -80,7 +80,7 @@ async def compare_documents(reference: UploadFile = File(...), actual: UploadFil
         ref_file = reference
    
         doc_compare = DocumentComparator()
-        _ = doc_compare.save_pdf_files(ref_file,act_file)
+        ref_path,act_path = doc_compare.save_pdf_files(FastAPIFileAdapter(ref_file),FastAPIFileAdapter(act_file))
         text_content = doc_compare.combine_pdf_text()
 
         compare_handler = DocumentComparatorLLM()
