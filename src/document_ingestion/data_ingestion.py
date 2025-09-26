@@ -1,3 +1,4 @@
+from fastapi import UploadFile
 from logger import GLOBAL_LOGGER as log
 from exception.custom_exception import CustomException 
 from langchain_community.document_loaders import PyPDFLoader,TextLoader, Docx2txtLoader
@@ -109,6 +110,7 @@ class DocHandler():
         :param session_id: Unique identifier for the session.  
         """
         try:
+          log.info(f"Initializing DataIngestion with file path: {dir_path} and session ID: {session_id}")
           self.dir_path = dir_path or os.getenv("DEFAULT_FILE_PATH",os.path.join(os.getcwd(), "data","archive_pdfs"))
           self.session_id = session_id or f"session_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
 
@@ -124,7 +126,7 @@ class DocHandler():
             file_name = os.path.basename(uploaded_files.name)
             save_path = os.path.join(self.new_dir_path,file_name)
             with open(save_path, 'wb') as file:
-                file.write(open(uploaded_files, "rb").read())
+                file.write(uploaded_files.getbuffer())
 
             log.info(f"PDF saved successfully at: {save_path}")
             _remove_pdf_files(base_dir=self.dir_path)
@@ -181,12 +183,16 @@ class DocumentComparator():
             self.act_file = act_file
             #if not self.ref_file.name.lower().endswith('.pdf') or not self.act_file.name.lower().endswith('.pdf'):
              #   raise ValueError("One or both files are not PDFs.")
-            ref_save_path = self.session_path / Path(self.ref_file.name)
-            act_save_path = self.session_path / Path(self.act_file.name)
-            with open(ref_save_path, 'wb') as file:
-                file.write(open(ref_file, "rb").read())
-            with open(act_save_path, 'wb') as file:
-                file.write(open(act_file, "rb").read())
+            ref_save_path = self.session_path / self.ref_file.name
+            act_save_path = self.session_path / self.act_file.name
+            for fobj, out in ((ref_file,ref_save_path), (act_file, act_save_path)):
+                if not fobj.name.lower().endswith(".pdf"):
+                    raise ValueError("Only PDF files are allowed.")
+                with open(out, "wb") as f:
+                    if hasattr(fobj, "read"):
+                        f.write(fobj.read())
+                    else:
+                        f.write(fobj.getbuffer())
             log.info(f"PDF files saved successfully at: {self.session_path}")
 
             _remove_pdf_files(base_dir=self.base_dir)
