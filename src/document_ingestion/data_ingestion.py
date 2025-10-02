@@ -164,10 +164,10 @@ class DocumentComparator():
         """
         try:
             # Set base directory for saving PDFs
-            self.base_dir = dir_path or os.getenv("DEFAULT_FILE_PATH", os.path.join(os.getcwd(), "data", "archive_pdfs"))
+            self.base_dir_path = dir_path or os.getenv("DEFAULT_FILE_PATH", os.path.join(os.getcwd(), "data", "archive_pdfs"))
             
             self.sessionn_file = session_id or f"session_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
-            self.session_path = Path(self.base_dir) / Path(self.sessionn_file)
+            self.session_path = Path(self.base_dir_path) / Path(self.sessionn_file)
             self.session_path.mkdir(parents=True, exist_ok=True)
         except Exception as e:
             log.error(f"Error initializing Ingestor: {e}")
@@ -179,12 +179,10 @@ class DocumentComparator():
         :return: Paths where the PDF files are saved.
         """
         try:
-            self.ref_file = ref_file
-            self.act_file = act_file
             #if not self.ref_file.name.lower().endswith('.pdf') or not self.act_file.name.lower().endswith('.pdf'):
              #   raise ValueError("One or both files are not PDFs.")
-            ref_save_path = self.session_path / self.ref_file.name
-            act_save_path = self.session_path / self.act_file.name
+            ref_save_path = self.session_path / ref_file.name
+            act_save_path = self.session_path / act_file.name
             for fobj, out in ((ref_file,ref_save_path), (act_file, act_save_path)):
                 if not fobj.name.lower().endswith(".pdf"):
                     raise ValueError("Only PDF files are allowed.")
@@ -195,7 +193,7 @@ class DocumentComparator():
                         f.write(fobj.getbuffer())
             log.info(f"PDF files saved successfully at: {self.session_path}")
 
-            _remove_pdf_files(base_dir=self.base_dir)
+            #_remove_pdf_files(base_dir=self.base_dir_path)
 
             return ref_save_path, act_save_path
 
@@ -244,10 +242,10 @@ class DocumentComparator():
                     content = self.read_pdf(file)
                     doc_parts.append(f"Document: {file.name}\n{content}")
             combined_text = "\n\n".join(doc_parts)
-            log.info("Documents combined", count=len(doc_parts), session=self.session_id)
+            log.info("Documents combined successfully")
             return combined_text
         except Exception as e:
-            log.error("Error combining documents", error=str(e), session=self.session_id)
+            log.error("Error combining documents")
             raise Exception("Error combining documents", e) from e
 
 def _remove_pdf_files(base_dir="Data/archive",log_dir="logs",keep_latest:int=3):
@@ -259,7 +257,7 @@ def _remove_pdf_files(base_dir="Data/archive",log_dir="logs",keep_latest:int=3):
             print(sessions)
             if len(sessions) > keep_latest:
                 for session in sessions[keep_latest:]:
-                    if os.path.exists(log_file):
+                    if os.path.exists(session):
                       os.remove(session)
                 log.info(f"Old session removed successfully ")
               

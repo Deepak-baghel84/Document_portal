@@ -45,7 +45,7 @@ class DocumentComparatorLLM:
             log.info(f"Document comparision have completed successfully.")
             return self._format_response(response)
         except Exception as e:
-            log(f"Document comparision have an issue: {e}")
+            log.info(f"Document comparision have an issue: {e}")
             raise CustomException("Document_compare have an issue ",sys)
 
 

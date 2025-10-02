@@ -101,8 +101,9 @@ class ModelLoader:
                 temperature=temperature,
                 )
         else:
-            raise CustomException(f"Unsupported LLM model: {self.config['llm_model']}", sys)
             log.info(f"LLM model {model_name} loaded successfully.")
+            raise CustomException(f"Unsupported LLM model: {self.config['llm_model']}", sys)
+            
      
 
 
