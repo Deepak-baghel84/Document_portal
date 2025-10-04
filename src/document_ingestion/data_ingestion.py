@@ -14,6 +14,7 @@ import uuid
 import os
 from typing import List, Optional, Iterable
 from pypdf import PdfReader
+from utils.file_io import save_uploaded_files,generate_session_id
 
 
 
@@ -21,7 +22,7 @@ class ChatIngestor():
     """Class to handle document ingestion and FAISS index creation for chat applications.
     """
     
-    def __init__(self,temp_base: str = "data",faiss_base: str = "faiss_index",use_session_dirs: bool = True,session_id: Optional[str] = None,):
+    def __init__(self,temp_base: str = "Data",faiss_base: str = "faiss_index",use_session_dirs: bool = True,session_id: Optional[str] = None,):
         """
         Initializes the DocumentIngestor with paths for file storage and FAISS index.
         :param file_path: Directory where documents will be stored.
@@ -31,12 +32,14 @@ class ChatIngestor():
         
         try:
             self.model_loader = ModelLoader()
-            
+            self.embed = self.model_loader.load_embedding()
             self.use_session = use_session_dirs
             self.session_id = session_id or generate_session_id()
             
-            self.temp_base = Path(temp_base); self.temp_base.mkdir(parents=True, exist_ok=True)
-            self.faiss_base = Path(faiss_base); self.faiss_base.mkdir(parents=True, exist_ok=True)
+            self.temp_base = Path(temp_base) 
+            self.temp_base.mkdir(parents=True, exist_ok=True)
+            self.faiss_base = Path(faiss_base)
+            self.faiss_base.mkdir(parents=True, exist_ok=True)
             
             self.temp_dir = self._resolve_dir(self.temp_base)
             self.faiss_dir = self._resolve_dir(self.faiss_base)
@@ -49,22 +52,24 @@ class ChatIngestor():
         except Exception as e:
             log.error("Failed to initialize ChatIngestor", error=str(e))
             raise Exception("Initialization error in ChatIngestor", e) from e
-            
-          
-
-        except Exception as e:
-            log.error("error in initialization DocumentIngestor")
-            raise (e,sys)
         
+    def _resolve_dir(self, base: Path):
+        if self.use_session:
+            d = base / self.session_id # e.g. "faiss_index/abc123"
+            d.mkdir(parents=True, exist_ok=True) # creates dir if not exists
+            return d
+        return base # fallback: "faiss_index/"   
+    
     def ingest_file(self,uploaded_files,session_id=None):
         try:
+            session_id = session_id or self.session_id
             if not uploaded_files or len(uploaded_files) == 0:
                 log.error("No files provided for ingestion.")
                 raise CustomException("No files provided for ingestion.", sys)
             for file in uploaded_files:
                 log.info(f"Loading document from path: {file}")
                 file_name = os.path.basename(file.name)
-                new_file_path = self.temp_path / file_name    
+                new_file_path = self.temp_base / file_name    
                 with open(new_file_path, 'wb') as f:
                     f.write(file.read())
 
@@ -88,14 +93,14 @@ class ChatIngestor():
             docs = load_documents(paths)
             if not docs:
                 raise ValueError("No valid documents loaded")
-            text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+            text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
             split_docs = text_splitter.split_documents(documents)
             log.info(f"Documents splited into {len(split_docs)} chunks")
             self.vectorstore = FAISS.from_documents(split_docs, self.embed)
             self.vectorstore.save_local(self.session_faiss_index)
             log.info(f"FAISS index built and saved at {self.session_faiss_index}")
 
-            retriver = self.vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 5})
+            retriver = self.vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": k})
             return retriver
         except Exception as e:
             log.error(f"Error in creating retrivel: {e}")
@@ -112,7 +117,7 @@ class DocHandler():
         try:
           log.info(f"Initializing DataIngestion with file path: {dir_path} and session ID: {session_id}")
           self.dir_path = dir_path or os.getenv("DEFAULT_FILE_PATH",os.path.join(os.getcwd(), "data","archive_pdfs"))
-          self.session_id = session_id or f"session_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
+          self.session_id = session_id or generate_session_id()
 
           self.new_dir_path = os.path.join(self.dir_path,self.session_id)
           self.new_file = os.makedirs(self.new_dir_path, exist_ok=True)
@@ -166,7 +171,7 @@ class DocumentComparator():
             # Set base directory for saving PDFs
             self.base_dir_path = dir_path or os.getenv("DEFAULT_FILE_PATH", os.path.join(os.getcwd(), "data", "archive_pdfs"))
             
-            self.sessionn_file = session_id or f"session_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
+            self.sessionn_file = session_id or generate_session_id()
             self.session_path = Path(self.base_dir_path) / Path(self.sessionn_file)
             self.session_path.mkdir(parents=True, exist_ok=True)
         except Exception as e:

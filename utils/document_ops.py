@@ -20,11 +20,11 @@ def load_documents(file_paths:Iterable[Path])-> List[Document]:
                 log.error(f"Unsupported file format: {Path(file_name).suffix}")
                 continue
 
-            if file_name.suffix.lower() == ".pdf":
+            if Path(file_name).suffix.lower() == ".pdf":
                 loader = PyPDFLoader(str(file_path))
-            elif file_name.suffix.lower() == ".docx":
+            elif Path(file_name).suffix.lower() == ".docx":
                 loader = Docx2txtLoader(str(file_path))
-            elif file_name.suffix.lower() == ".txt":
+            elif Path(file_name).suffix.lower() == ".txt":
                 loader = TextLoader(str(file_path), encoding="utf-8")
             else:
                 log.error(f"Unsupported file format: {file_path.suffix}")
