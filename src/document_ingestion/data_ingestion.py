@@ -79,9 +79,9 @@ class ChatIngestor():
                 log.error("No valid documents were loaded.")
                 raise CustomException("No valid documents were loaded.", sys)
             
-            log.info(f"Files saved successfully at {self.temp_path} and loaded into documents list")
+            log.info(f"Files saved successfully at {self.temp_dir} and loaded into documents list")
 
-            _remove_pdf_files(base_dir=self.file_path)
+            _remove_pdf_files(base_dir=self.temp_base)
             return documents
         except Exception as e:
             log.error(f"Error during file ingestion: {e}")

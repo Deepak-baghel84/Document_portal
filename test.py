@@ -11,7 +11,7 @@ def test_doc_chat():
     try:
         file_paths = ["Data//Resume.pdf","Data//Sample.pdf","Data//Deepak_Baghel_Resume.pdf"]
        
-        ingestor = ChatIngestor(temp_base="Data//multidoc_archive", faiss_base = "faiss_index",use_session_dirs = False,session_id= None)
+        ingestor = ChatIngestor(temp_base="Data//multidoc_archive", faiss_base = "faiss_index",use_session_dirs = True,session_id= None)
         uploaded_files = []
         for file_path in file_paths:
              if Path(file_path).exists():
