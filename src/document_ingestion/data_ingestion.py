@@ -4,19 +4,53 @@ from exception.custom_exception import CustomException
 from langchain_community.document_loaders import PyPDFLoader,TextLoader, Docx2txtLoader
 from pathlib import Path 
 import sys 
+import json
+import hashlib
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from datetime import datetime
 from utils.model_utils import ModelLoader
 from utils.document_ops import load_documents
 from langchain_community.vectorstores import FAISS
-from datetime import datetime
-import uuid
 import os
-from typing import List, Optional, Iterable
+from typing import Any, List, Optional, Iterable, Dict
 from pypdf import PdfReader
 from utils.file_io import save_uploaded_files,generate_session_id
 
+class FaissManager:
+    def __init__(self,index_dir:Path,model_loader:Optional[ModelLoader]=None):
+        self.faiss_dir = Path(index_dir)
+        index_dir.mkdir(parents=True, exist_ok=True)
+        self.model_loader = model_loader or ModelLoader()
+        self.embed = self.model_loader.load_embedding()
 
+        meta_path = self.faiss_dir / "metadata.json"
+        self._meta:Dict[str,Any] = {"rows":{}}
+        if self.meta_path.exists():
+            try:
+                self._meta = json.loads(self.meta_path.read_text(encoding="utf-8")) or {"rows": {}} # load it if alrady there
+            except Exception:
+                self._meta = {"rows": {}} # init the empty one if dones not exists
+        self.vs: Optional[FAISS] = None
+        
+    def _exists(self)-> bool:
+        return (self.index_dir / "index.faiss").exists() and (self.index_dir / "index.pkl").exists()
+    
+    @staticmethod
+    def _fingerprint(text: str, md: Dict[str, Any]) -> str:
+        src = md.get("source") or md.get("file_path")
+        rid = md.get("row_id")
+        if src is not None:
+            return f"{src}::{'' if rid is None else rid}"
+        return hashlib.sha256(text.encode("utf-8")).hexdigest()
+    
+    def load_faiss_index(self,chunks)-> Optional[FAISS]:
+        if self.session_faiss_index.exists():
+            embed = self.model_loader.load_embedding()
+            vectorstore = FAISS.
+            log.info(f"FAISS index loaded from {self.session_faiss_index}")
+            return vectorstore
+        log.warning(f"No FAISS index found at {self.session_faiss_index}")
+        return None
 
 class ChatIngestor():
     """Class to handle document ingestion and FAISS index creation for chat applications.
@@ -32,7 +66,6 @@ class ChatIngestor():
         
         try:
             self.model_loader = ModelLoader()
-            self.embed = self.model_loader.load_embedding()
             self.use_session = use_session_dirs
             self.session_id = session_id or generate_session_id()
             
@@ -90,24 +123,31 @@ class ChatIngestor():
     def create_retrivel(self,documents: Iterable,*,chunk_size: int = 1000,chunk_overlap: int = 200,k: int = 5):
         try:
             paths = save_uploaded_files(documents, self.temp_dir)
-            docs = load_documents(paths)
+            docs = load_documents(paths)            #return the text from the document
             if not docs:
                 raise ValueError("No valid documents loaded")
-            text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-            split_docs = text_splitter.split_documents(documents)
-            log.info(f"Documents splited into {len(split_docs)} chunks")
-            self.vectorstore = FAISS.from_documents(split_docs, self.embed)
-            self.vectorstore.save_local(self.session_faiss_index)
-            log.info(f"FAISS index built and saved at {self.session_faiss_index}")
+            
+            chunks = self._split(docs, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+            fm = FaissManager(self.faiss_dir, self.model_loader)
+            text=[c.content for c in chunks]
+            md=[c.metadata for c in chunks]
 
-            retriver = self.vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": k})
+            retriver = vs.as_retriever(search_type="similarity", search_kwargs={"k": k})
             return retriver
         except Exception as e:
             log.error(f"Error in creating retrivel: {e}")
             raise CustomException(f"Error building retriver: {e}", sys)
         
 
-
+    def _split(self,docs: List,*,chunk_size: int = 1000,chunk_overlap: int = 200)-> List:
+        try:
+            text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+            chunks = text_splitter.split_documents(docs)     #split the document not the text into chunks
+            log.info(f"Documents split into {len(chunks)} chunks (size={chunk_size}, overlap={chunk_overlap})")
+            return chunks
+        except Exception as e:
+            log.error(f"Error splitting documents: {e}")
+            raise CustomException(f"Error splitting documents: {e}", sys)
 class DocHandler():
     def __init__(self,dir_path:Optional[str]="Data//analyzer_archive",session_id:Optional[str]=None):
         """Initialize the DataIngestion class with file path and session ID.

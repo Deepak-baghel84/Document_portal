@@ -14,8 +14,11 @@ def load_documents(file_paths:Iterable[Path])-> List[Document]:
     docs: List[Document] = []
     try:
         for file_path in file_paths :
-            log.info(f"Loading document from path: {file_path}")
-            file_name = os.path.basename(file_path.name)
+            if not isinstance(file_path,(str,Path)):
+                file_path = file_path.name
+                file_name = os.path.basename(file_path)
+
+            log.info(f"Loading document from path: {file_name}")
             if Path(file_name).suffix.lower() not in SUPPORTED_EXTENSIONS:
                 log.error(f"Unsupported file format: {Path(file_name).suffix}")
                 continue
@@ -35,8 +38,8 @@ def load_documents(file_paths:Iterable[Path])-> List[Document]:
         log.info(f"Loaded {len(docs)} pages successfully")
         return docs
     except Exception as e:
-        log.error(f"Error loading document : {e}")
-        raise CustomException(f"Error loading document : {e}", None)
+        log.error(f"Error loading document")
+        raise CustomException(f"Error during load document")
     
 def concat_for_analysis(docs: List[Document]) -> str:
     parts = []
