@@ -1,4 +1,5 @@
 from fastapi import UploadFile
+from exception import custom_exception
 from logger import GLOBAL_LOGGER as log
 from exception.custom_exception import CustomException 
 from langchain_community.document_loaders import PyPDFLoader,TextLoader, Docx2txtLoader
@@ -11,6 +12,7 @@ from datetime import datetime
 from utils.model_utils import ModelLoader
 from utils.document_ops import load_documents
 from langchain_community.vectorstores import FAISS
+from langchain.schema import Document
 import os
 from typing import Any, List, Optional, Iterable, Dict
 from pypdf import PdfReader
@@ -18,12 +20,12 @@ from utils.file_io import save_uploaded_files,generate_session_id
 
 class FaissManager:
     def __init__(self,index_dir:Path,model_loader:Optional[ModelLoader]=None):
-        self.faiss_dir = Path(index_dir)
+        self.index_dir = Path(index_dir)
         index_dir.mkdir(parents=True, exist_ok=True)
         self.model_loader = model_loader or ModelLoader()
         self.embed = self.model_loader.load_embedding()
 
-        meta_path = self.faiss_dir / "metadata.json"
+        self.meta_path = self.index_dir / "metadata.json"
         self._meta:Dict[str,Any] = {"rows":{}}
         if self.meta_path.exists():
             try:
@@ -42,16 +44,42 @@ class FaissManager:
         if src is not None:
             return f"{src}::{'' if rid is None else rid}"
         return hashlib.sha256(text.encode("utf-8")).hexdigest()
-    
-    def load_faiss_index(self,chunks)-> Optional[FAISS]:
-        if self.session_faiss_index.exists():
-            embed = self.model_loader.load_embedding()
-            vectorstore = FAISS.
-            log.info(f"FAISS index loaded from {self.session_faiss_index}")
-            return vectorstore
-        log.warning(f"No FAISS index found at {self.session_faiss_index}")
-        return None
 
+    def add_documents(self,docs: List[Document]):
+        
+        if self.vs is None:
+            raise RuntimeError("Call load_or_create() before add_documents_idempotent().")
+        
+        new_docs: List[Document] = []
+        
+        for d in docs:
+            
+            key = self._fingerprint(d.page_content, d.metadata or {})
+            if key in self._meta["rows"]:
+                continue
+            self._meta["rows"][key] = True
+            new_docs.append(d)
+            
+        if new_docs:
+            self.vs.add_documents(new_docs)
+            self.vs.save_local(str(self.index_dir))
+            self._save_meta()
+        return len(new_docs)
+    def load_or_create(self,texts:Optional[List[str]]=None, metadatas: Optional[List[dict]] = None):
+        ## if we running first time then it will not go in this block
+        if self._exists():
+            self.vs = FAISS.load_local(
+                str(self.index_dir),
+                embeddings=self.emb,
+                allow_dangerous_deserialization=True,
+            )
+            return self.vs
+        
+        if not texts:
+            raise CustomException("No existing FAISS index and no data to create one", sys)
+        self.vs = FAISS.from_texts(texts=texts, embedding=self.emb, metadatas=metadatas or [])
+        self.vs.save_local(str(self.index_dir))
+        return self.vs
 class ChatIngestor():
     """Class to handle document ingestion and FAISS index creation for chat applications.
     """
@@ -131,13 +159,23 @@ class ChatIngestor():
             fm = FaissManager(self.faiss_dir, self.model_loader)
             text=[c.content for c in chunks]
             md=[c.metadata for c in chunks]
+       
+            try:
+                vs = fm.load_or_create(texts=text, metadatas=md)
+            except Exception:
+                vs = fm.load_or_create(texts=text, metadatas=md)
 
-            retriver = vs.as_retriever(search_type="similarity", search_kwargs={"k": k})
-            return retriver
+            added = fm.add_documents(chunks)
+            log.info("FAISS index updated", added=added, index=str(self.faiss_dir))
+            
+            return vs.as_retriever(search_type="similarity", search_kwargs={"k": k})
+            
         except Exception as e:
-            log.error(f"Error in creating retrivel: {e}")
-            raise CustomException(f"Error building retriver: {e}", sys)
+            log.error("Failed to build retriever", error=str(e))
+            raise CustomException("Failed to build retriever", e) from e
         
+      
+            
 
     def _split(self,docs: List,*,chunk_size: int = 1000,chunk_overlap: int = 200)-> List:
         try:
