@@ -1,5 +1,7 @@
 from __future__ import annotations
 import re
+import sys
+import os
 import uuid
 from pathlib import Path
 from datetime import datetime
@@ -23,8 +25,11 @@ def save_uploaded_files(uploaded_files: Iterable, target_dir: Path) -> List[Path
     try:
         target_dir.mkdir(parents=True, exist_ok=True)
         saved: List[Path] = []
+        if not uploaded_files or len(uploaded_files) == 0:
+            log.error("No files provided for ingestion or versioning.")
+            raise CustomException("No files provided for ingestion.", sys)
         for uf in uploaded_files:
-            name = getattr(uf, "name", "file")
+            name = os.path.basename(uf.name)                               #getattr(uf, "name", "file")
             ext = Path(name).suffix.lower()
             if ext not in SUPPORTED_EXTENSIONS:
                 log.warning("Unsupported file skipped", filename=name)
@@ -44,4 +49,4 @@ def save_uploaded_files(uploaded_files: Iterable, target_dir: Path) -> List[Path
         return saved
     except Exception as e:
         log.error("Failed to save uploaded files", error=str(e), dir=str(target_dir))
-        raise DocumentPortalException("Failed to save uploaded files", e) from e
+        raise CustomException("Failed to save uploaded files", e) from e

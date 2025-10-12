@@ -1,6 +1,7 @@
 from __future__ import annotations
 from pathlib import Path
 import os
+import sys
 from typing import Iterable, List
 from fastapi import UploadFile
 from langchain.schema import Document
@@ -13,25 +14,25 @@ SUPPORTED_EXTENSIONS = {".pdf", ".docx", ".txt"}
 def load_documents(file_paths:Iterable[Path])-> List[Document]:
     docs: List[Document] = []
     try:
+        #if not file_paths or len(file_paths) == 0:
+         #   log.error("No file paths provided for loading documents.")
+          #  raise CustomException("No file paths provided for loading documents.", sys)
+
+        log.info(f"Loading {len(file_paths)} documents")
         for file_path in file_paths :
-            if not isinstance(file_path,(str,Path)):
-                file_path = file_path.name
-                file_name = os.path.basename(file_path)
 
-            log.info(f"Loading document from path: {file_name}")
-            if Path(file_name).suffix.lower() not in SUPPORTED_EXTENSIONS:
-                log.error(f"Unsupported file format: {Path(file_name).suffix}")
-                continue
-
-            if Path(file_name).suffix.lower() == ".pdf":
+            file_name = os.path.basename(file_path)
+            ext= Path(file_path).suffix.lower()
+            if ext == ".pdf":
                 loader = PyPDFLoader(str(file_path))
-            elif Path(file_name).suffix.lower() == ".docx":
+            elif ext == ".docx":
                 loader = Docx2txtLoader(str(file_path))
-            elif Path(file_name).suffix.lower() == ".txt":
+            elif ext == ".txt":
                 loader = TextLoader(str(file_path), encoding="utf-8")
             else:
-                log.error(f"Unsupported file format: {file_path.suffix}")
-                raise CustomException(f"Unsupported file format: {file_path.suffix}", None)
+                log.warning("Unsupported extension skipped", path=str(file_path))
+                continue
+                
         
             doc = loader.load()
             docs.extend(f"Document: {file_name}\n{d.page_content}" for d in doc)

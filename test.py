@@ -19,9 +19,8 @@ def test_doc_chat():
              else:
                  print(f"File does not exist: {file_path}")
             
-        documents = ingestor.ingest_file(uploaded_files)
   
-        retriver = ingestor.create_retrivel(document=documents,chunk_size= 1000,chunk_overlap= 200,k= 5)
+        retriver = ingestor.create_retrivel(uploaded_files,chunk_size= 1000,chunk_overlap= 200,k= 5)
         doc_retriver = ConversationalRAG(retriver=retriver)
         for file in uploaded_files:
             file.close()

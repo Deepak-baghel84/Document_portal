@@ -53,7 +53,6 @@ class FaissManager:
         new_docs: List[Document] = []
         
         for d in docs:
-            
             key = self._fingerprint(d.page_content, d.metadata or {})
             if key in self._meta["rows"]:
                 continue
@@ -120,44 +119,22 @@ class ChatIngestor():
             d.mkdir(parents=True, exist_ok=True) # creates dir if not exists
             return d
         return base # fallback: "faiss_index/"   
-    
-    def ingest_file(self,uploaded_files,session_id=None):
-        try:
-            session_id = session_id or self.session_id
-            if not uploaded_files or len(uploaded_files) == 0:
-                log.error("No files provided for ingestion.")
-                raise CustomException("No files provided for ingestion.", sys)
-            for file in uploaded_files:
-                log.info(f"Loading document from path: {file}")
-                file_name = os.path.basename(file.name)
-                new_file_path = self.temp_base / file_name    
-                with open(new_file_path, 'wb') as f:
-                    f.write(file.read())
 
-            documents = load_documents(uploaded_files)
 
-            if documents == []:
-                log.error("No valid documents were loaded.")
-                raise CustomException("No valid documents were loaded.", sys)
-            
-            log.info(f"Files saved successfully at {self.temp_dir} and loaded into documents list")
-
-            _remove_pdf_files(base_dir=self.temp_base)
-            return documents
-        except Exception as e:
-            log.error(f"Error during file ingestion: {e}")
-            raise CustomException(f"Error during file ingestion: {e}", sys)
+        #  _remove_pdf_files(base_dir=self.temp_base)
+          
         
     def create_retrivel(self,documents: Iterable,*,chunk_size: int = 1000,chunk_overlap: int = 200,k: int = 5):
         try:
-            paths = save_uploaded_files(documents, self.temp_dir)
+            paths = save_uploaded_files(documents, self.temp_dir)     #document versioning
             docs = load_documents(paths)            #return the text from the document
-            if not docs:
-                raise ValueError("No valid documents loaded")
-            
+            if not docs or docs == []:
+                log.info("No valid text extracted from documents")
+                raise ValueError("No valid text extracted")
+         
             chunks = self._split(docs, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
             fm = FaissManager(self.faiss_dir, self.model_loader)
-            text=[c.content for c in chunks]
+            text=[c.page_content for c in chunks]
             md=[c.metadata for c in chunks]
        
             try:
