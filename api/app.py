@@ -92,29 +92,41 @@ async def compare_documents(reference: UploadFile = File(...), actual: UploadFil
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Comparison failed: {e}")
 
-@app.post("/chat/ingest")
-async def chat_ingest(files:List[UploadFile]=File(...),session_id: Optional[str] = Form(None),use_session_dirs:bool=Form(True),k: int = Form(5),chunk_size: int = Form(512),chunk_overlap: int = Form(50))->Any:
+# ---------- CHAT: INDEX ----------
+@app.post("/chat/index")
+async def chat_build_index(
+    files: List[UploadFile] = File(...),
+    session_id: Optional[str] = Form(None),
+    use_session_dirs: bool = Form(True),
+    chunk_size: int = Form(1000),
+    chunk_overlap: int = Form(200),
+    k: int = Form(5),
+) -> Any:
     try:
-        wrapped = [file for file in files]
-        log.info(f"Received files for chat ingestion")
-        if wrapped is None or len(wrapped) == 0:
-            raise HTTPException(status_code=400, detail="No files provided")
-        
-        file_handler = ChatIngestor(temp_base=UPLOAD_BASE,
+        log.info(f"Indexing chat session. Session ID: {session_id}, Files: {[f.filename for f in files]}")
+        wrapped = [FastAPIFileAdapter(f) for f in files]
+        # this is my main class for storing a data into VDB
+        # created a object of ChatIngestor
+        ci = ChatIngestor(
+            temp_base=UPLOAD_BASE,
             faiss_base=FAISS_BASE,
             use_session_dirs=use_session_dirs,
-            session_id=session_id or None,)
-        save_pdf_path = file_handler.save_pdf_files(wrapped)
-        log.info(f"PDFs saved at: {save_pdf_path}")
-
-        text_content = file_handler.combine_pdf_text()
-        log.info(f"Content read from PDFs: {text_content[:100]}...")  # Print first 100 characters for brevity
-
-        retriever = file_handler.create_retrivel(wrapped, chunk_size=chunk_size, chunk_overlap=chunk_overlap, k=k)
-        return {"session_id": file_handler.session_id, "k": k, "use_session_dirs": use_session_dirs}
+            session_id=session_id or None,
+        )
+        # NOTE: ensure your ChatIngestor saves with index_name="index" or FAISS_INDEX_NAME
+        # e.g., if it calls FAISS.save_local(dir, index_name=FAISS_INDEX_NAME)
+        ci.create_retrivel(  # if your method name is actually build_retriever, fix it there as well
+            wrapped, chunk_size=chunk_size, chunk_overlap=chunk_overlap, k=k
+        )
+        log.info(f"Index created successfully for session: {ci.session_id}")
+        return {"session_id": ci.session_id, "k": k, "use_session_dirs": use_session_dirs}
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Ingestion failed: {e}")
+        log.exception("Chat index building failed")
+        raise HTTPException(status_code=500, detail=f"Indexing failed: {e}")
 
+# ---------- CHAT: QUERY ----------
 @app.post("/chat/query")
 async def chat_query(
     question: str = Form(...),
@@ -123,20 +135,18 @@ async def chat_query(
     k: int = Form(5),
 ) -> Any:
     try:
+        log.info(f"Received chat query: '{question}' | session: {session_id}")
         if use_session_dirs and not session_id:
             raise HTTPException(status_code=400, detail="session_id is required when use_session_dirs=True")
 
-        # Prepare FAISS index path
         index_dir = os.path.join(FAISS_BASE, session_id) if use_session_dirs else FAISS_BASE  # type: ignore
         if not os.path.isdir(index_dir):
             raise HTTPException(status_code=404, detail=f"FAISS index not found at: {index_dir}")
 
-        # Initialize LCEL-style RAG pipeline
-        rag = ConversationalRAG(session_id=session_id) #type: ignore
-        #rag.load_retriever_from_faiss(index_dir)
-
-        # Optional: For now we pass empty chat history
-        response = rag.Invoke(question, chat_history=[])
+        rag = ConversationalRAG(session_id=session_id)
+        rag.load_retriever_from_faiss(index_dir, k=k, index_name=FAISS_INDEX_NAME)  # build retriever + chain
+        response = rag.invoke(question, chat_history=[])
+        log.info("Chat query handled successfully.")
 
         return {
             "answer": response,
@@ -144,8 +154,8 @@ async def chat_query(
             "k": k,
             "engine": "LCEL-RAG"
         }
-
     except HTTPException:
         raise
     except Exception as e:
+        log.exception("Chat query failed")
         raise HTTPException(status_code=500, detail=f"Query failed: {e}")

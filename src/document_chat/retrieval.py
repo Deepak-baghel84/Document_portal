@@ -13,6 +13,8 @@ import sys
 from langchain_core.documents import Document
 from operator import itemgetter
 from dotenv import load_dotenv
+from typing import Dict, Any
+import os
 
 load_dotenv()
 
@@ -41,7 +43,49 @@ class ConversationalRAG:
             log.error("Error in initialization DocumentRetriever")
             raise (e, sys)
         
+    def load_retriever_from_faiss(
+        self,
+        index_path: str,
+        k: int = 5,
+        index_name: str = "index",
+        search_type: str = "similarity",
+        search_kwargs: Optional[Dict[str, Any]] = None,
+    ):
+        """
+        Load FAISS vectorstore from disk and build retriever + LCEL chain.
+        """
+        try:
+            if not os.path.isdir(index_path):
+                raise FileNotFoundError(f"FAISS index directory not found: {index_path}")
 
+            embeddings = ModelLoader().load_embeddings()
+            vectorstore = FAISS.load_local(
+                index_path,
+                embeddings,
+                index_name=index_name,
+                allow_dangerous_deserialization=True,  # ok if you trust the index
+            )
+
+            if search_kwargs is None:
+                search_kwargs = {"k": k}
+
+            self.retriever = vectorstore.as_retriever(
+                search_type=search_type, search_kwargs=search_kwargs
+            )
+            self._build_lcel_chain()
+
+            log.info(
+                "FAISS retriever loaded successfully",
+                index_path=index_path,
+                index_name=index_name,
+                k=k,
+                session_id=self.session_id,
+            )
+            return self.retriever
+
+        except Exception as e:
+            log.error("Failed to load retriever from FAISS", error=str(e))
+            raise CustomException("Loading error in ConversationalRAG", sys)
     def Invoke(self,user_query:str,chat_history:Optional[List[BaseMessage]]=None):
         try:
             if self.main_chain is None:
@@ -79,7 +123,7 @@ class ConversationalRAG:
             log.error("Error in invoking DocumentRetriever")
             raise CustomException(f"Error generating answer in invoke: {e}", sys)
 
-
+     
     def _create_retrivel(self,documents):
         """
         Builds a LangChain retriever using the provided documents.

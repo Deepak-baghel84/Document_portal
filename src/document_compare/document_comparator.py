@@ -25,7 +25,7 @@ class DocumentComparatorLLM:
 
           self.prompt = PROMPT_REGISTRY[PromptType.DOCUMENT_COMPARISON.value]
 
-          self.chain = self.prompt | self.llm | self.parser
+          self.chain = self.prompt | self.llm
           log.info("DocumentCompare initialized successfully.")
         except Exception as e:
             log.error(f"Error initializing DocumentCompare: {e}")
@@ -40,7 +40,7 @@ class DocumentComparatorLLM:
                 
             inputs = {"combined_docs":combined_text ,
                       "format_instruction":self.parser.get_format_instructions()}
-        
+            
             response = self.chain.invoke(inputs)
             log.info(f"Document comparision have completed successfully.")
             return self._format_response(response)
