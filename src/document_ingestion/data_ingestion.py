@@ -69,7 +69,7 @@ class FaissManager:
         if self._exists():
             self.vs = FAISS.load_local(
                 str(self.index_dir),
-                embeddings=self.emb,
+                embeddings=self.embed,
                 allow_dangerous_deserialization=True,
             )
             return self.vs
@@ -123,6 +123,15 @@ class ChatIngestor():
 
         #  _remove_pdf_files(base_dir=self.temp_base)
           
+    def _split(self,docs: List,*,chunk_size: int = 1000,chunk_overlap: int = 200)-> List:
+        try:
+            text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+            chunks = text_splitter.split_documents(docs)     #split the document into chunks not the text 
+            log.info(f"Documents split into {len(chunks)} chunks (size={chunk_size}, overlap={chunk_overlap})")
+            return chunks
+        except Exception as e:
+            log.error(f"Error splitting documents: {e}")
+            raise CustomException(f"Error splitting documents: {e}", sys)
         
     def create_retrivel(self,documents: Iterable,*,chunk_size: int = 1000,chunk_overlap: int = 200,k: int = 5):
         try:
@@ -131,8 +140,11 @@ class ChatIngestor():
             if not docs or docs == []:
                 log.info("No valid text extracted from documents")
                 raise ValueError("No valid text extracted")
-         
-            chunks = self._split(docs, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+            text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+            chunks = text_splitter.split_documents(docs)     #split the document into chunks not the text 
+            log.info(f"Documents split into {len(chunks)} ")
+
+             # create or load faiss index
             fm = FaissManager(self.faiss_dir, self.model_loader)
             text=[c.page_content for c in chunks]
             md=[c.metadata for c in chunks]
@@ -148,21 +160,11 @@ class ChatIngestor():
             return vs.as_retriever(search_type="similarity", search_kwargs={"k": k})
             
         except Exception as e:
-            log.error("Failed to build retriever", error=str(e))
-            raise CustomException("Failed to build retriever", e) from e
-        
-      
+            log.error("Failed to create retriever", error=str(e))
+            raise CustomException("Failed to create retriever", e) from e     
             
 
-    def _split(self,docs: List,*,chunk_size: int = 1000,chunk_overlap: int = 200)-> List:
-        try:
-            text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-            chunks = text_splitter.split_documents(docs)     #split the document not the text into chunks
-            log.info(f"Documents split into {len(chunks)} chunks (size={chunk_size}, overlap={chunk_overlap})")
-            return chunks
-        except Exception as e:
-            log.error(f"Error splitting documents: {e}")
-            raise CustomException(f"Error splitting documents: {e}", sys)
+    
 class DocHandler():
     def __init__(self,dir_path:Optional[str]="Data//analyzer_archive",session_id:Optional[str]=None):
         """Initialize the DataIngestion class with file path and session ID.
@@ -280,7 +282,7 @@ class DocumentComparator():
             if not data_block:
                 raise ValueError("No text found in the PDF file.")
             
-            log.info(f"PDF read successfully from: {file_path}")
+            log.info(f"PDF read successfully from: {file_path} with {len(data_block)} pages")
             if data_block == []:
                 raise ValueError("PDF file is empty or could not be read.")
             return "\n".join(data_block)

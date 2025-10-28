@@ -25,7 +25,7 @@ class DocumentComparatorLLM:
 
           self.prompt = PROMPT_REGISTRY[PromptType.DOCUMENT_COMPARISON.value]
 
-          self.chain = self.prompt | self.llm
+          self.chain = self.prompt | self.llm | self.fixing_parser
           log.info("DocumentCompare initialized successfully.")
         except Exception as e:
             log.error(f"Error initializing DocumentCompare: {e}")
