@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
         compare_handler = DocumentComparatorLLM()
         df = compare_handler.Document_compare(text_content)
-        print(f"Comparison DataFrame: {df.head()}")  # Print first few rows of the DataFrame
+        print(f"Comparison DataFrame: {df}")  # Print first few rows of the DataFrame
         
     except CustomException as e:
         print(f"An error occurred: {e}")

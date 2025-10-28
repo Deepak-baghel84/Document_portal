@@ -1,3 +1,4 @@
+from textwrap import indent
 from fastapi import UploadFile
 from exception import custom_exception
 from logger import GLOBAL_LOGGER as log
@@ -44,6 +45,9 @@ class FaissManager:
         if src is not None:
             return f"{src}::{'' if rid is None else rid}"
         return hashlib.sha256(text.encode("utf-8")).hexdigest()
+    
+    def _save_meta(self):
+        self.meta_path.write_text(json.dumps(self._meta), encoding="utf-8")     #ensure_ascii=False
 
     def add_documents(self,docs: List[Document]):
         
@@ -76,8 +80,9 @@ class FaissManager:
         
         if not texts:
             raise CustomException("No existing FAISS index and no data to create one", sys)
-        self.vs = FAISS.from_texts(texts=texts, embedding=self.emb, metadatas=metadatas or [])
+        self.vs = FAISS.from_texts(texts=texts, embedding=self.embed, metadatas=metadatas or [])
         self.vs.save_local(str(self.index_dir))
+        log.info("Created new FAISS index", index=str(self.index_dir))
         return self.vs
 class ChatIngestor():
     """Class to handle document ingestion and FAISS index creation for chat applications.
@@ -142,7 +147,7 @@ class ChatIngestor():
                 raise ValueError("No valid text extracted")
             text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
             chunks = text_splitter.split_documents(docs)     #split the document into chunks not the text 
-            log.info(f"Documents split into {len(chunks)} ")
+            log.info(f"Documents split into {len(chunks)} chunks ")
 
              # create or load faiss index
             fm = FaissManager(self.faiss_dir, self.model_loader)

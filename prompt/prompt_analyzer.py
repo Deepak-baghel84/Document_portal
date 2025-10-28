@@ -13,20 +13,25 @@ Analyze this document:
 
 # Prompt for document comparison
 document_comparison_prompt = ChatPromptTemplate.from_template("""
-You will be provided with content from two PDFs. Your tasks are as follows:
+You are a precise document comparison assistant. Compare the content of two PDFs and return ONLY a valid JSON output.
 
-1. Compare the content in two PDFs
-2. Identify the difference in PDF and note down the page number 
-3. The output you provide must be page wise comparison content 
-4. If any page do not have any change, mention as 'NO CHANGE' 
+Follow these strict rules:
+- Compare the documents page by page.
+- For each page, if there are differences, describe them under "Changes".
+- If no changes exist, write "NO CHANGE".
+- Do not add extra commentary or explanations.
+- Your entire response must be a JSON list, nothing else.
 
-Input documents:
+Expected JSON Format:
+[
+  {{
+    "Page": "<page_number or name>",
+    "Changes": "<description of changes or 'NO CHANGE'>"
+  }}
+]
 
+Documents to compare:
 {combined_docs}
-
-Your response should follow this format:
-
-{format_instruction}
 """)
 
 # Prompt for contextual question rewriting

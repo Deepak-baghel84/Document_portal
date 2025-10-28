@@ -37,6 +37,7 @@ def load_documents(file_paths:Iterable[Path])-> List[Document]:
             doc = loader.load()
             docs.extend(f"Document: {file_name}\n{d.page_content}" for d in doc)
         log.info(f"Loaded {len(docs)} pages successfully")
+        docs = [Document(page_content=d) if isinstance(d, str) else d for d in docs]
         return docs
     except Exception as e:
         log.error(f"Error loading document")
