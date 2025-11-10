@@ -30,7 +30,7 @@ llm:
     #context_window: 8192
   google:
     provider: "google"
-    model_name: "gemini-1.5-flash"
+    model_name: "gemini-2.5-flash"
     temperature: 0.2
     max_output_tokens: 2048
     #context_window: 8192
