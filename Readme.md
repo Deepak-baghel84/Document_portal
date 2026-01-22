@@ -1,4 +1,4 @@
-📂 Enterprise Document Portal
+# 📂 Enterprise Document Portal
 
 An Enterprise Document Portal that enables seamless interaction with documents of various formats.
 This project provides three main functionalities:
@@ -11,7 +11,7 @@ This project provides three main functionalities:
 
 -------------------------------------------------------------------------------------------------------------
 
-🚀 Features
+## 🚀 Features
 
 * Compare documents side by side, even if they differ in type.
 
@@ -25,7 +25,7 @@ This project provides three main functionalities:
 
 ===========================================================================
 
-🛠️ Tech Stack
+## 🛠️ Tech Stack
 
 * Backend: Python, FastAPI (planned integration)
 
@@ -37,7 +37,7 @@ This project provides three main functionalities:
 
 ------------------------------------------------------------------------------
 
-📂 Project Structure
+# 📂 Project Structure
 
 document_portal/
 │── src/                     # Core source code
