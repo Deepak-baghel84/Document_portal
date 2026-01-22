@@ -18,8 +18,7 @@ packages = [
     "python-multipart",
     "docx2txt",
     "pypdf"
-    "pandas",
-    "cfn-lint"
+    "pdfreader"
 ]
 for pkg in packages:
     try:

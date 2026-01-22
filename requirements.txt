@@ -13,6 +13,6 @@ PyMuPDF==1.26.3
 structlog==25.4.0
 ipykernel==6.30.0
 docx2txt==0.9
-pypdf==3.11.2
+pypdf==5.9.0
 
 
