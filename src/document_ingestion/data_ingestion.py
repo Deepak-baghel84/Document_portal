@@ -20,6 +20,8 @@ from pypdf import PdfReader
 from utils.file_io import save_uploaded_files,generate_session_id
 
 class FaissManager:
+    '''Class to manage FAISS index operations.
+       '''
     def __init__(self,index_dir:Path,model_loader:Optional[ModelLoader]=None):
         self.index_dir = Path(index_dir)
         index_dir.mkdir(parents=True, exist_ok=True)
@@ -50,7 +52,7 @@ class FaissManager:
         self.meta_path.write_text(json.dumps(self._meta), encoding="utf-8")     #ensure_ascii=False
 
     def add_documents(self,docs: List[Document]):
-        
+        '''Add documents to the FAISS index, ensuring no duplicates based on content and metadata.'''
         if self.vs is None:
             raise RuntimeError("Call load_or_create() before add_documents_idempotent().")
         
@@ -69,6 +71,7 @@ class FaissManager:
             self._save_meta()
         return len(new_docs)
     def load_or_create(self,texts:Optional[List[str]]=None, metadatas: Optional[List[dict]] = None):
+        '''Loads an existing FAISS index or creates a new one if it doesn't exist. '''
         ## if we running first time then it will not go in this block
         if self._exists():
             self.vs = FAISS.load_local(
@@ -149,11 +152,11 @@ class ChatIngestor():
             chunks = text_splitter.split_documents(docs)     #split the document into chunks not the text 
             log.info(f"Documents split into {len(chunks)} chunks ")
 
-             # create or load faiss index
+             # create or load faiss index        # Error in this line to 166
             fm = FaissManager(self.faiss_dir, self.model_loader)
             text=[c.page_content for c in chunks]
-            md=[c.metadata for c in chunks]
-       
+            md=[m.metadata for m in chunks]
+        
             try:
                 vs = fm.load_or_create(texts=text, metadatas=md)
             except Exception:
@@ -314,7 +317,7 @@ class DocumentComparator():
         except Exception as e:
             log.error("Error combining documents")
             raise Exception("Error combining documents", e) from e
-
+              #---------------Optional------------------#
 def _remove_pdf_files(base_dir="Data/archive",log_dir="logs",keep_latest:int=3):
         """Remove the PDF files from the session directory."""
         try:
