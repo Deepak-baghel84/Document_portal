@@ -17,7 +17,7 @@ document:
 
 embedding_model:
   provider: "google"
-  model: "models/text-embedding-004"
+  model: "gemini-embedding-2-preview"
   max_output_tokens: 2048
   max_tokens: 4096
 
