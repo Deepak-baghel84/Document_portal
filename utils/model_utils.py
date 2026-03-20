@@ -1,8 +1,9 @@
+from ast import List
 import os
 import sys
 from turtle import mode
 from dotenv import load_dotenv
-
+#from google import genai    # not required as we are using langchain_google_genai wrapper
 from logger.custom_logger import CustomLogger
 from exception.custom_exception import CustomException
 from utils.config_util import load_config
@@ -63,10 +64,10 @@ class ModelLoader:
               )
           else:
               raise CustomException(f"Unsupported embedding model: {self.config['embedding_model']}", sys)
-          log.info(f"Embedding model {model_name} loaded successfully.")
         except Exception as e:
             log.error(f"Error loading embedding model: {e}")
             raise CustomException(e, sys)
+        log.info(f"Embedding model {model_name} loaded successfully.")
 
     def load_llm(self):
         """Loads the language model based on the configuration settings."""
