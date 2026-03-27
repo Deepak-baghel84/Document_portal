@@ -15,4 +15,7 @@ ipykernel==6.30.0
 docx2txt==0.9
 pypdf==5.9.0
 
+#for testing
+#pytest                    
+#httpx
 

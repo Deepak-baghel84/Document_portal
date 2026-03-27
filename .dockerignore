@@ -3,9 +3,38 @@ __pycache__/
 *.pyo
 *.pyd
 .Python
+
+myenv/
+.env/
 env/
 venv/
+
 .git
 .gitignore
-*.log
+
+# Pytest
+.pytest_cache/
+
+# Logs
 logs/
+*.log
+
+# Data & ML artifacts
+Data/
+archive_dir/
+faiss_index/
+
+# Notebooks
+notebook/
+*.ipynb
+
+# Temp / debug files
+api_test.py
+test.py
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
