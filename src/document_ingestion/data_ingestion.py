@@ -152,7 +152,7 @@ class ChatIngestor():
             chunks = text_splitter.split_documents(docs)     #split the document into chunks not the text 
             log.info(f"Documents split into {len(chunks)} chunks ")
 
-             # create or load faiss index        # Error in this line to 166
+             # create or load faiss index 
             fm = FaissManager(self.faiss_dir, self.model_loader)
             text=[c.page_content for c in chunks]
             md=[m.metadata for m in chunks]
