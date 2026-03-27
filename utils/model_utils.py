@@ -1,7 +1,5 @@
-from ast import List
 import os
 import sys
-from turtle import mode
 from dotenv import load_dotenv
 #from google import genai    # not required as we are using langchain_google_genai wrapper
 from logger.custom_logger import CustomLogger
