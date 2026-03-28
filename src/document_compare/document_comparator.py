@@ -6,8 +6,8 @@ from prompt.prompt_analyzer import PROMPT_REGISTRY
 from utils.model_utils import ModelLoader
 from model.base_model import SummaryResponse,PromptType
 import sys
-import pandas as pd
 from dotenv import load_dotenv
+import pandas as pd
 
 
 class DocumentComparatorLLM:
