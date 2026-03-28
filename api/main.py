@@ -10,7 +10,7 @@ from logger import GLOBAL_LOGGER as log
 
 from pathlib import Path
 import os 
-from utils.document_ops import FastAPIFileAdapter,read_pdf_via_handler
+from utils.document_ops import FastAPIFileAdapter
 from typing import List, Optional, Any, Dict
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request
 from fastapi.responses import JSONResponse, HTMLResponse
@@ -56,7 +56,7 @@ async def analyze_document(file:UploadFile=File(...))-> JSONResponse:
         if not file:
             raise HTTPException(status_code=400, detail="No file provided") 
         file_dir = file
-        log.info(f"Saving file to analyzer archive.")
+        log.info("Saving file to analyzer archive.")
         file_handler = DocHandler(dir_path="Data//analyzer_archive",session_id="test_session")
         
         save_file_path = file_handler.save_pdf(FastAPIFileAdapter(file_dir))

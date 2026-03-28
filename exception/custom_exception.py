@@ -1,5 +1,4 @@
 import sys
-import os
 import traceback
 
 
@@ -17,9 +16,8 @@ class CustomException(Exception):
     def __str__(self):
         return f"Error occurred in script: {self.file_name} at line number: {self.line_number} with message: {self.error_message} \nTraceback: {self.traceback}"
 
-    if __name__ == "__main__":
-        try:
-            1 / 0  # Example to raise an exception
-        except Exception as e:
-            error = CustomException(e, sys)
-            raise error
+    # if __name__ == "__main__":
+    #     try:
+    #         1 / 0  # Example to raise an exception
+    #     except Exception as e:
+    #         raise e

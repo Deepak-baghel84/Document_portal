@@ -1,5 +1,3 @@
-import os
-from pydoc import text 
 from src.document_compare.document_comparator import DocumentComparatorLLM
 from src.document_ingestion.data_ingestion import DocumentComparator 
 from exception.custom_exception import CustomException

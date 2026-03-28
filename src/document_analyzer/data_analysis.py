@@ -1,4 +1,3 @@
-import os
 from exception.custom_exception import CustomException
 from logger import GLOBAL_LOGGER as log
 from utils.model_utils import ModelLoader

@@ -1,4 +1,3 @@
-from multiprocessing.managers import BaseManager
 from langchain_core.messages import BaseMessage
 from langchain_community.vectorstores import FAISS
 from langchain_core.output_parsers import StrOutputParser
@@ -7,10 +6,8 @@ from logger import GLOBAL_LOGGER as log
 from exception.custom_exception import CustomException
 from utils.model_utils import ModelLoader
 from prompt.prompt_analyzer import PROMPT_REGISTRY
-from model.base_model import PromptType,SummaryResponse
-from pathlib import Path
+from model.base_model import PromptType
 import sys
-from langchain_core.documents import Document
 from operator import itemgetter
 from dotenv import load_dotenv
 from typing import Dict, Any

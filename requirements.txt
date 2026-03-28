@@ -18,4 +18,4 @@ pypdf==5.9.0
 #for testing
 pytest                    
 httpx
-
+# ruff

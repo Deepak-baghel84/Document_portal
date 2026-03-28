@@ -1,7 +1,6 @@
 from __future__ import annotations
 from pathlib import Path
 import os
-import sys
 from typing import Iterable, List
 from fastapi import UploadFile
 from langchain.schema import Document
@@ -39,9 +38,9 @@ def load_documents(file_paths:Iterable[Path])-> List[Document]:
         log.info(f"Loaded {len(docs)} pages successfully")
         docs = [Document(page_content=d) if isinstance(d, str) else d for d in docs]
         return docs
-    except Exception as e:
-        log.error(f"Error loading document")
-        raise CustomException(f"Error during load document")
+    except Exception:
+        log.error("Error loading document")
+        raise CustomException("Error during load document")
     
 def concat_for_analysis(docs: List[Document]) -> str:
     parts = []

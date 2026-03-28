@@ -1,15 +1,10 @@
-from textwrap import indent
-from fastapi import UploadFile
-from exception import custom_exception
 from logger import GLOBAL_LOGGER as log
 from exception.custom_exception import CustomException 
-from langchain_community.document_loaders import PyPDFLoader,TextLoader, Docx2txtLoader
 from pathlib import Path 
 import sys 
 import json
 import hashlib
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from datetime import datetime
 from utils.model_utils import ModelLoader
 from utils.document_ops import load_documents
 from langchain_community.vectorstores import FAISS
@@ -329,7 +324,7 @@ def _remove_pdf_files(base_dir="Data/archive",log_dir="logs",keep_latest:int=3):
                 for session in sessions[keep_latest:]:
                     if os.path.exists(session):
                       os.remove(session)
-                log.info(f"Old session removed successfully ")
+                log.info("Old session removed successfully ")
               
             
             logs = sorted([f for f in _log_dir.iterdir() if f.is_file() and f.suffix == '.log'], reverse=True)
@@ -337,7 +332,7 @@ def _remove_pdf_files(base_dir="Data/archive",log_dir="logs",keep_latest:int=3):
                 for log_file in logs[keep_latest:]:
                     if os.path.exists(log_file):
                       os.remove(log_file)
-                log.info(f"Old logs removed successfully ")
+                log.info("Old logs removed successfully ")
 
             return
         except Exception as e:

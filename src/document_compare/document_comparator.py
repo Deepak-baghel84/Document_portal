@@ -42,7 +42,7 @@ class DocumentComparatorLLM:
                       "format_instruction":self.parser.get_format_instructions()}
             
             response = self.chain.invoke(inputs)
-            log.info(f"Document comparision have completed successfully.")
+            log.info("Document comparision have completed successfully.")
             return self._format_response(response)
         except Exception as e:
             log.info(f"Document comparision have an issue: {e}")

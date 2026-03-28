@@ -13,6 +13,7 @@ venv/
 *.egg-info/
 *.egg
 *.log
+.ruff_cache/
 
 # OS & editor files
 .DS_Store
