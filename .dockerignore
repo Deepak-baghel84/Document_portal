@@ -31,7 +31,7 @@ notebook/
 
 # Temp / debug files
 api_test.py
-test.py
+test_archive/
 
 # VS Code
 .vscode/
